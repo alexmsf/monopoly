@@ -9,29 +9,23 @@
 </head>
 <body>
 
-<!-- ===================== PASSWORD GATE ===================== -->
-<!-- Change the password by editing the value in checkPassword() in this file -->
+<!-- PASSWORD GATE -->
 <div id="lock-screen" class="screen active">
   <div class="lock-box">
     <div class="lock-icon">🔒</div>
     <div class="logo">MONO<span>POLY</span></div>
-    <div class="subtitle">Our Edition ♥</div>
+    <div class="subtitle">♥</div>
     <div class="lock-form">
-      <input
-        type="password"
-        id="pw-input"
-        placeholder="Enter password"
+      <input type="password" id="pw-input" placeholder="Enter password"
         onkeydown="if(event.key==='Enter') checkPassword()"
-        autocomplete="off"
-        autofocus
-      />
+        autocomplete="off" autofocus />
       <button class="btn-start" onclick="checkPassword()">Unlock</button>
       <div id="pw-error" class="pw-error hidden">Wrong password — try again.</div>
     </div>
   </div>
 </div>
 
-<!-- ===================== MULTIPLAYER BAR =================== -->
+<!-- MP BAR -->
 <div id="mp-bar" class="hidden">
   <div class="mp-dot" id="mp-dot"></div>
   <span>Room: <span class="mp-room" id="mp-room-code">—</span></span>
@@ -39,12 +33,11 @@
   <span class="mp-your-turn hidden" id="mp-your-turn">✦ Your turn!</span>
 </div>
 
-<!-- ===================== SETUP SCREEN ====================== -->
+<!-- SETUP SCREEN -->
 <div id="setup-screen" class="screen">
   <div class="setup-box">
     <div class="logo">MONO<span>POLY</span></div>
     <div class="subtitle">Our Edition ♥</div>
-
     <div class="mp-section">
       <div class="mp-section-title">Multiplayer (optional)</div>
       <div class="mp-tabs">
@@ -52,42 +45,44 @@
         <div class="mp-tab" id="tab-host"  onclick="selectMpTab('host')">Host online</div>
         <div class="mp-tab" id="tab-join"  onclick="selectMpTab('join')">Join online</div>
       </div>
-
       <div class="mp-panel active" id="panel-local">
-        <div class="mp-status">Pass &amp; play on this device — all players take turns here.</div>
+        <div class="mp-status">Pass &amp; play on this device.</div>
       </div>
-
       <div class="mp-panel" id="panel-host">
         <div class="mp-code-display" id="host-code" title="Click to copy">—</div>
         <div class="mp-status" id="host-status">Generating room code…</div>
       </div>
-
       <div class="mp-panel" id="panel-join">
         <div class="mp-input-row">
-          <input type="text" id="join-code-input" placeholder="Enter room code" maxlength="6" />
+          <input type="text" id="join-code-input" placeholder="Room code" maxlength="6" />
           <button class="btn-sm" onclick="joinRoom()">Join</button>
         </div>
         <div class="mp-status" id="join-status"></div>
       </div>
     </div>
-
     <div id="player-list"></div>
     <button class="btn-add" onclick="addPlayer()">+ Add player</button>
     <button class="btn-start" id="btn-start" onclick="startGame()">Start Game</button>
   </div>
 </div>
 
-<!-- ===================== GAME SCREEN ======================= -->
+<!-- GAME SCREEN -->
 <div id="game-screen" class="screen">
 
+  <!-- LEFT PANEL -->
   <div id="left-panel">
     <div id="players-panel"></div>
     <div id="bank-panel">
       <div class="panel-title" style="margin-top:6px">Bank</div>
       <div id="bank-display"></div>
     </div>
+    <!-- Rules at bottom of left panel -->
+    <div id="rules-panel">
+      <button class="btn-rules" onclick="openRules()">📖 Rules</button>
+    </div>
   </div>
 
+  <!-- BOARD -->
   <div id="board-wrap">
     <div id="board-container">
       <img id="board-img" src="final-board.png" alt="Board" />
@@ -95,12 +90,12 @@
     </div>
   </div>
 
+  <!-- RIGHT PANEL -->
   <div id="right-panel">
     <div id="turn-info">
       <div id="current-player-name">—</div>
       <div id="current-player-money">—</div>
     </div>
-
     <div id="dice-area">
       <div id="dice-display">
         <div class="die" id="die1">·</div>
@@ -108,18 +103,15 @@
       </div>
       <div id="dice-total"></div>
     </div>
-
     <div id="action-buttons">
-      <button class="btn-action"          id="btn-roll"     onclick="rollDice()">🎲 Roll Dice</button>
-      <button class="btn-action hidden"   id="btn-buy"      onclick="buyProperty()">🏠 Buy</button>
-      <button class="btn-action hidden"   id="btn-pay-jail" onclick="payJail()">⛓ Pay ₩50 to leave jail</button>
-      <button class="btn-action hidden"   id="btn-pass"     onclick="endTurn()">➜ End Turn</button>
+      <button class="btn-action"           id="btn-roll"     onclick="rollDice()">🎲 Roll Dice</button>
+      <button class="btn-action hidden"    id="btn-buy"      onclick="buyProperty()">🏠 Buy</button>
+      <button class="btn-action hidden"    id="btn-pay-jail" onclick="payJail()">⛓ Pay ₩50 to leave jail</button>
+      <button class="btn-action hidden"    id="btn-pass"     onclick="endTurn()">➜ End Turn</button>
       <button class="btn-action secondary" onclick="openProperties()">📋 Properties</button>
       <button class="btn-action secondary" onclick="openTrade()">🤝 Trade</button>
       <button class="btn-action secondary" onclick="openBuildMenu()">🏗 Build</button>
-      <button class="btn-action secondary" onclick="openRules()">📖 Rules</button>
     </div>
-
     <div id="log-box">
       <div class="panel-title">Log</div>
       <div id="log-entries"></div>
@@ -127,7 +119,7 @@
   </div>
 </div>
 
-<!-- ===================== MODAL ============================= -->
+<!-- MODAL -->
 <div id="modal-overlay" class="hidden" onclick="closeModal(event)">
   <div id="modal-box">
     <button class="modal-close" onclick="closeModalForce()">✕</button>
@@ -135,71 +127,50 @@
   </div>
 </div>
 
-<!-- ===================== CARD POPUP ======================== -->
+<!-- CARD POPUP -->
 <div id="card-popup" class="hidden">
   <div id="card-popup-inner">
     <div class="card-type-label" id="card-type-label">Chance</div>
-    <div class="card-title" id="card-title-display"></div>
-    <!-- Sprite image display (real card from sheet) -->
+    <div class="card-title" id="card-title-display"></div>  <!-- ADD THIS LINE -->
+    <!-- SVG sprite card display -->
     <div id="card-sprite-display"></div>
-    <!-- Text fallback for cards without a sprite -->
+    <!-- Text fallback -->
     <div id="card-popup-text"></div>
-    <button class="btn-action" style="justify-content:center;margin-top:18px" onclick="dismissCard()">OK</button>
+    <button class="btn-action" style="justify-content:center;margin-top:16px" onclick="dismissCard()">OK, got it</button>
   </div>
 </div>
 
-<!-- ===================== CARD EFFECT OVERLAY =============== -->
+<!-- CARD EFFECT OVERLAY -->
 <div id="card-effect-overlay" class="hidden">
   <div id="card-effect-icon"></div>
 </div>
 
+<!-- TURN TOAST -->
+<div id="turn-toast" class="hidden"></div>
+
 <script>
-  // ============================================================
-  //  PASSWORD GATE
-  //  Change the password below to whatever you like.
-  //  It is hashed so it's not sitting in plain text in the file.
-  // ============================================================
-
-  // To generate your own hash: open your browser console and run:
-  //   crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourpassword'))
-  //     .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
-  //
-  // Then paste the resulting hex string below as PW_HASH.
-  //
-  // DEFAULT PASSWORD IS:  antibes
-  // (replace the hash below after changing it)
-
+  // PASSWORD — default: antibes
   var PW_HASH = 'e137599975c539a7e0a1c2afd626e35c3cb2061d1ae7e609e0d9aa5cef53d66a';
-
   function checkPassword() {
     var input = document.getElementById('pw-input').value;
     var err   = document.getElementById('pw-error');
     err.classList.add('hidden');
-
     crypto.subtle.digest('SHA-256', new TextEncoder().encode(input)).then(function(buf) {
       var hex = Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
       if (hex === PW_HASH) {
-        // Correct — fade out lock screen and show setup
         var lock = document.getElementById('lock-screen');
         lock.style.opacity = '0';
         lock.style.transition = 'opacity 0.4s ease';
-        setTimeout(function() {
-          lock.classList.remove('active');
-          lock.style.display = 'none';
-          document.getElementById('setup-screen').classList.add('active');
-        }, 400);
+        setTimeout(function() { lock.classList.remove('active'); lock.style.display='none'; document.getElementById('setup-screen').classList.add('active'); }, 400);
       } else {
         err.classList.remove('hidden');
-        var inp = document.getElementById('pw-input');
-        inp.value = '';
-        inp.focus();
+        var inp = document.getElementById('pw-input'); inp.value=''; inp.focus();
         inp.classList.add('pw-shake');
         setTimeout(function(){ inp.classList.remove('pw-shake'); }, 500);
       }
     });
   }
 </script>
-
 <script src="game.js"></script>
 </body>
 </html>
