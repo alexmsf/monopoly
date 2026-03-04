@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Monopoly — Our Edition</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- PeerJS for P2P multiplayer -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+</head>
+<body>
+
+<!-- MULTIPLAYER STATUS BAR (shown during game) -->
+<div id="mp-bar" class="hidden">
+  <div class="mp-dot" id="mp-dot"></div>
+  <span>Room: <span class="mp-room" id="mp-room-code">—</span></span>
+  <span class="mp-peers" id="mp-peers-info"></span>
+  <span class="mp-your-turn hidden" id="mp-your-turn">✦ Your turn!</span>
+</div>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" class="screen active">
+  <div class="setup-box">
+    <div class="logo">MONO<span>POLY</span></div>
+    <div class="subtitle">Our Edition ♥</div>
+
+    <!-- Multiplayer section -->
+    <div class="mp-section">
+      <div class="mp-section-title">Multiplayer (optional)</div>
+      <div class="mp-tabs">
+        <div class="mp-tab active" id="tab-local" onclick="selectMpTab('local')">Same device</div>
+        <div class="mp-tab" id="tab-host" onclick="selectMpTab('host')">Host online</div>
+        <div class="mp-tab" id="tab-join" onclick="selectMpTab('join')">Join online</div>
+      </div>
+
+      <div class="mp-panel active" id="panel-local">
+        <div class="mp-status">Pass &amp; play on this device — all players take turns here.</div>
+      </div>
+
+      <div class="mp-panel" id="panel-host">
+        <div class="mp-code-display" id="host-code" title="Click to copy">—</div>
+        <div class="mp-status" id="host-status">Generating room code…</div>
+      </div>
+
+      <div class="mp-panel" id="panel-join">
+        <div class="mp-input-row">
+          <input type="text" id="join-code-input" placeholder="Enter room code" maxlength="6" />
+          <button class="btn-sm" onclick="joinRoom()">Join</button>
+        </div>
+        <div class="mp-status" id="join-status"></div>
+      </div>
+    </div>
+
+    <!-- Players -->
+    <div id="player-list"></div>
+    <button class="btn-add" onclick="addPlayer()">+ Add player</button>
+    <button class="btn-start" id="btn-start" onclick="startGame()">Start Game</button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div id="game-screen" class="screen">
+
+  <!-- LEFT: players -->
+  <div id="left-panel">
+    <div id="players-panel"></div>
+    <div id="bank-panel">
+      <div class="panel-title" style="margin-top:6px">Bank</div>
+      <div id="bank-display"></div>
+    </div>
+  </div>
+
+  <!-- CENTER: board -->
+  <div id="board-wrap">
+    <div id="board-container">
+      <img id="board-img" src="final-board.png" alt="Board" />
+      <div id="tokens-layer"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: actions + log -->
+  <div id="right-panel">
+    <div id="turn-info">
+      <div id="current-player-name">—</div>
+      <div id="current-player-money">—</div>
+    </div>
+
+    <div id="dice-area">
+      <div id="dice-display">
+        <div class="die" id="die1">·</div>
+        <div class="die" id="die2">·</div>
+      </div>
+      <div id="dice-total"></div>
+    </div>
+
+    <div id="action-buttons">
+      <button class="btn-action" id="btn-roll" onclick="rollDice()">🎲 Roll Dice</button>
+      <button class="btn-action hidden" id="btn-buy" onclick="buyProperty()">🏠 Buy</button>
+      <button class="btn-action hidden" id="btn-pay-jail" onclick="payJail()">⛓ Pay ₼50 to leave jail</button>
+      <button class="btn-action hidden" id="btn-pass" onclick="endTurn()">➜ End Turn</button>
+      <button class="btn-action secondary" onclick="openProperties()">📋 Properties</button>
+      <button class="btn-action secondary" onclick="openTrade()">🤝 Trade</button>
+      <button class="btn-action secondary" onclick="openBuildMenu()">🏗 Build</button>
+    </div>
+
+    <div id="log-box">
+      <div class="panel-title">Log</div>
+      <div id="log-entries"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay" class="hidden" onclick="closeModal(event)">
+  <div id="modal-box">
+    <button class="modal-close" onclick="closeModalForce()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<!-- CARD POPUP -->
+<div id="card-popup" class="hidden">
+  <div id="card-popup-inner">
+    <div class="card-type-label" id="card-type-label">Chance</div>
+    <div class="card-title" id="card-title-display"></div>
+    <div id="card-popup-text"></div>
+    <button class="btn-action" style="justify-content:center" onclick="dismissCard()">OK</button>
+  </div>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
