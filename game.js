@@ -255,6 +255,7 @@ var G = {
 var MP = { mode:'local', peer:null, myPeerId:null, connections:[], myPlayerIndex:-1, roomCode:null };
 var remoteSetupPlayers = [];
 var myReady = false;
+var broadcastTimer = null;
 
 function genRoomCode() {
   var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s='';
@@ -268,33 +269,33 @@ function mpOnData(data) {
   if(data.type==='state') applyRemoteState(data.state);
   else if(data.type==='action'&&MP.mode==='host') handleRemoteAction(data);
   else if(data.type==='player_joined') {
-    log(data.name+' joined!','good');
-    // Update remote player display
-    var existing = remoteSetupPlayers.findIndex(function(p){ return p.peerId === data.peerId; });
-    var entry = { name: data.name, tokenIdx: data.tokenIdx||1, ready: false, peerId: data.peerId };
-    if (existing >= 0) remoteSetupPlayers[existing] = entry;
-    else remoteSetupPlayers.push(entry);
-    // Send back our own info
-    broadcastMyName();
-    renderSetup();
-  }
-  else if(data.type==='setup_player') {
-    var idx = remoteSetupPlayers.findIndex(function(p){ return p.peerId === data.peerId; });
-    var entry = { name: data.name, tokenIdx: data.tokenIdx||1, ready: data.ready||false, peerId: data.peerId||'remote' };
-    if (idx >= 0) remoteSetupPlayers[idx] = entry;
-    else remoteSetupPlayers.push(entry);
-    renderSetup();
-  }
+  log(data.name+' joined!','good');
+  updateMpBar();
+  // Send back our own info immediately
+  var p = setupPlayers[0];
+  var reply = { type:'setup_player', name: p?p.name:'Host', tokenIdx: p?p.tokenIdx:0, ready: myReady, peerId: MP.myPeerId||'host' };
+  mpSendAll(reply);
+  if(MP.connections.length>0) try{ MP.connections[0].send(reply); }catch(e){}
+}
+else if(data.type==='setup_player') {
+  if (!data.peerId || data.peerId === (MP.myPeerId||'unknown')) return; // ignore our own echoes
+  var idx = remoteSetupPlayers.findIndex(function(p){ return p.peerId === data.peerId; });
+  var entry = { name: data.name, tokenIdx: data.tokenIdx, ready: data.ready||false, peerId: data.peerId };
+  if (idx >= 0) remoteSetupPlayers[idx] = entry;
+  else remoteSetupPlayers.push(entry);
+  renderSetup();
+}
 }
 function broadcastMyName() {
-  if (!mpEnabled() && mpTab !== 'host') return;
-  var p = setupPlayers[0];
-  var msg = { type: 'setup_player', name: p.name, tokenIdx: p.tokenIdx, ready: myReady };
-  mpSendAll(msg);
-  // also send via pending connection for join mode
-  if (MP.connections.length > 0) {
-    try { MP.connections[0].send(msg); } catch(e) {}
-  }
+  clearTimeout(broadcastTimer);
+  broadcastTimer = setTimeout(function() {
+    var p = setupPlayers[0];
+    var msg = { type: 'setup_player', name: p ? p.name : 'Guest', tokenIdx: p ? p.tokenIdx : 0, ready: myReady, peerId: MP.myPeerId || 'unknown' };
+    mpSendAll(msg);
+    if (MP.mode === 'client' && MP.connections.length > 0) {
+      try { MP.connections[0].send(msg); } catch(e) {}
+    }
+  }, 400); // debounce: wait 400ms after last keystroke
 }
 
 function toggleReady() {
@@ -435,15 +436,17 @@ function renderSetup() {
   // Show remote players (read-only) in online mode
   if (isOnline && remoteSetupPlayers.length > 0) {
     remoteSetupPlayers.forEach(function(rp) {
+      if (!rp.ready) return; // only show once they're ready
       var row = document.createElement('div');
       row.className = 'player-row remote-player-row';
       row.innerHTML =
         '<input type="text" value="' + rp.name + '" readonly style="opacity:.6;cursor:default"/>' +
-        '<span style="font-size:19px;padding:5px 8px">'+TOKEN_EMOJIS[rp.tokenIdx]+'</span>' +
-        '<span class="ready-badge"' + (rp.ready ? '' : ' style="opacity:.4"') + '>'+( rp.ready ? '✓ Ready' : '…')+'</span>';
+        '<span style="font-size:19px;padding:5px 8px">' + TOKEN_EMOJIS[rp.tokenIdx] + '</span>' +
+        '<span class="ready-badge">✓ Ready</span>';
       el.appendChild(row);
     });
   }
+}
 
   // Ready button for online modes
   var existing = document.getElementById('btn-ready');
