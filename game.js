@@ -312,16 +312,29 @@ function applyRemoteState(s) {
     document.getElementById('die2').textContent = s.lastDice[1];
     document.getElementById('dice-total').textContent = 'Total: ' + (s.lastDice[0] + s.lastDice[1]);
   }
+  if (s.logs) {
+    var logEl = document.getElementById('log-entries');
+    if (logEl) {
+      logEl.innerHTML = '';
+      s.logs.forEach(function(entry) {
+        var d = document.createElement('div');
+        d.className = 'log-entry ' + (entry.cls || '');
+        d.textContent = entry.text;
+        logEl.appendChild(d);
+      });
+    }
+  }
   renderAll(); updateMpBar(); syncActionButtons();
 }
 
 function serializeState() {
-  return {
-    players: G.players, current: G.current, phase: G.phase, properties: G.properties,
-    freeParkingPot: G.freeParkingPot, doublesCount: G.doublesCount, lastDice: G.lastDice,
-    co: G.chanceDeck.map(function(c){ return CHANCE_CARDS.indexOf(c); }),
-    mo: G.communityDeck.map(function(c){ return COMMUNITY_CARDS.indexOf(c); })
-  };
+  var logEl = document.getElementById('log-entries');
+  var logs = logEl ? [].slice.call(logEl.children).map(function(d){ return {text:d.textContent, cls:d.className.replace('log-entry','').trim()}; }) : [];
+  return {players:G.players,current:G.current,phase:G.phase,properties:G.properties,
+    freeParkingPot:G.freeParkingPot,doublesCount:G.doublesCount,lastDice:G.lastDice,
+    co:G.chanceDeck.map(function(c){return CHANCE_CARDS.indexOf(c);}),
+    mo:G.communityDeck.map(function(c){return COMMUNITY_CARDS.indexOf(c);}),
+    logs:logs};
 }
 
 function hostBcast() { if (MP.mode === 'host') mpSendAll({type:'state', state:serializeState()}); }
@@ -529,18 +542,25 @@ function startGame() {
   document.getElementById('btn-start').disabled = true;
   if (mpTab === 'host') { MP.mode = 'host'; MP.myPlayerIndex = 0; }
   else if (mpTab === 'join') { MP.mode = 'client'; MP.myPlayerIndex = 1; }
-  G.players = setupPlayers.map(function(p, i) {
-    return {
-      name: p.name.trim() || 'Player ' + (i + 1),
-      token: TOKEN_EMOJIS[p.tokenIdx],
-      color: TOKEN_COLORS[p.tokenIdx],
-      money: 1500, pos: 0, inJail: false, jailTurns: 0,
-      bankrupt: false, skipTurns: 0, freeRentThisTurn: false, properties: []
-    };
+  // Build full player list: host first, then all ready remote players
+  var allSetup = setupPlayers.slice();
+  remoteSetupPlayers.forEach(function(rp) {
+    if (rp.ready) allSetup.push({ name: rp.name, tokenIdx: rp.tokenIdx });
+  });
+  G.players = allSetup.map(function(p, i) {
+    return {name: p.name.trim() || 'Player '+(i+1), token: TOKEN_EMOJIS[p.tokenIdx], color: TOKEN_COLORS[p.tokenIdx],
+      money:1500, pos:0, inJail:false, jailTurns:0, bankrupt:false, skipTurns:0, freeRentThisTurn:false, properties:[]};
   });
   G.chanceDeck    = shuffle(CHANCE_CARDS.slice());
   G.communityDeck = shuffle(COMMUNITY_CARDS.slice());
   G.properties = {}; G.current = 0; G.phase = 'rolling'; G.doublesCount = 0; G.freeParkingPot = 0; G.lastDice = [0,0];
+  // Set correct player index for online players
+  if (MP.mode === 'client') {
+    var myName = setupPlayers[0] ? setupPlayers[0].name.trim() : '';
+    G.players.forEach(function(p, i) {
+      if (p.name === myName) MP.myPlayerIndex = i;
+    });
+  }
   launchGame();
   log('Game started! ' + G.players.map(function(p){ return p.token + ' ' + p.name; }).join(', '), 'important');
   log(curPlayer().name + "'s turn. Roll the dice!");
