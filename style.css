@@ -538,3 +538,163 @@ body.has-bar #game-screen { padding-top:30px; height:calc(100vh - 30px); }
   #left-panel { width:148px; min-width:148px; padding:9px 7px; }
   #right-panel { width:162px; min-width:162px; padding:9px 7px; }
 }
+
+/* ===== PASSWORD GATE ===== */
+#lock-screen {
+  background: var(--bg);
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.4s ease;
+}
+#lock-screen::before {
+  content: '';
+  position: absolute;
+  width: 600px; height: 600px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(197,112,58,.07) 0%, transparent 65%);
+  top: -200px; right: -160px; pointer-events: none;
+}
+#lock-screen::after {
+  content: '';
+  position: absolute;
+  width: 420px; height: 420px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(58,98,160,.05) 0%, transparent 65%);
+  bottom: -150px; left: -100px; pointer-events: none;
+}
+
+.lock-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 44px 50px;
+  width: 380px;
+  max-width: 92vw;
+  box-shadow: var(--sh-lg);
+  text-align: center;
+  position: relative; z-index: 1;
+}
+
+.lock-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+  opacity: 0.5;
+}
+
+.lock-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.lock-form input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  padding: 11px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  text-align: center;
+  letter-spacing: 3px;
+  outline: none;
+  transition: border 0.15s;
+}
+.lock-form input:focus { border-color: var(--accent); }
+.lock-form input::placeholder { letter-spacing: 0; color: var(--text3); font-size: 13px; }
+
+.pw-error {
+  font-size: 12.5px;
+  color: var(--red);
+  background: var(--red-bg);
+  border: 1px solid rgba(194,59,46,.15);
+  border-radius: var(--r-sm);
+  padding: 7px 12px;
+}
+
+@keyframes pwShake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+.pw-shake { animation: pwShake 0.45s ease; }
+
+/* ===== CARD SPRITE DISPLAY ===== */
+#card-popup-inner {
+  max-width: 520px;
+}
+
+#card-sprite-display {
+  border-radius: var(--r);
+  overflow: hidden;
+  box-shadow: var(--sh);
+  display: block;
+  margin: 0 auto;
+  /* width/height set by JS */
+  max-width: 100%;
+  /* Scale down on small screens */
+  transform-origin: top center;
+}
+
+/* Scale down sprite on narrow viewports */
+@media (max-width: 560px) {
+  #card-sprite-display {
+    width: 100% !important;
+    height: auto !important;
+    background-size: contain !important;
+  }
+}
+
+/* ===== CARD FLIP ANIMATION ===== */
+@keyframes cardFlipIn {
+  0%   { transform: rotateY(90deg) scale(0.85); opacity: 0; }
+  50%  { transform: rotateY(-8deg) scale(1.03); opacity: 1; }
+  100% { transform: rotateY(0deg) scale(1); opacity: 1; }
+}
+.card-flip {
+  animation: cardFlipIn 0.45s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+/* ===== CARD EFFECT OVERLAY ===== */
+#card-effect-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 250;
+  pointer-events: none;
+  background: transparent;
+}
+#card-effect-overlay.hidden { display: none; }
+
+#card-effect-icon {
+  font-size: 88px;
+  filter: drop-shadow(0 4px 24px rgba(0,0,0,0.25));
+}
+
+@keyframes effectPop {
+  0%   { transform: scale(0.3) translateY(30px); opacity: 0; }
+  40%  { transform: scale(1.25) translateY(-10px); opacity: 1; }
+  70%  { transform: scale(0.95) translateY(0); opacity: 1; }
+  100% { transform: scale(1.1) translateY(-20px); opacity: 0; }
+}
+.effect-pop #card-effect-icon {
+  animation: effectPop 0.85s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
+}
+
+/* ===== RULES MODAL ===== */
+#modal-content h2 { margin-bottom: 14px; }
+#modal-content p {
+  margin-bottom: 9px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text2);
+  padding-left: 10px;
+  border-left: 2px solid var(--border);
+}
+#modal-content p strong { color: var(--text); }
