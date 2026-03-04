@@ -253,6 +253,8 @@ var G = {
 
 // ── MULTIPLAYER (PeerJS) ──────────────────────────────────────
 var MP = { mode:'local', peer:null, myPeerId:null, connections:[], myPlayerIndex:-1, roomCode:null };
+var remoteSetupPlayers = [];
+var myReady = false;
 
 function genRoomCode() {
   var c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789', s='';
@@ -265,7 +267,40 @@ function mpSendAll(msg) { MP.connections.forEach(function(c){try{if(c.open)c.sen
 function mpOnData(data) {
   if(data.type==='state') applyRemoteState(data.state);
   else if(data.type==='action'&&MP.mode==='host') handleRemoteAction(data);
-  else if(data.type==='player_joined') log(data.name+' joined!','good');
+  else if(data.type==='player_joined') {
+    log(data.name+' joined!','good');
+    // Update remote player display
+    var existing = remoteSetupPlayers.findIndex(function(p){ return p.peerId === data.peerId; });
+    var entry = { name: data.name, tokenIdx: data.tokenIdx||1, ready: false, peerId: data.peerId };
+    if (existing >= 0) remoteSetupPlayers[existing] = entry;
+    else remoteSetupPlayers.push(entry);
+    // Send back our own info
+    broadcastMyName();
+    renderSetup();
+  }
+  else if(data.type==='setup_player') {
+    var idx = remoteSetupPlayers.findIndex(function(p){ return p.peerId === data.peerId; });
+    var entry = { name: data.name, tokenIdx: data.tokenIdx||1, ready: data.ready||false, peerId: data.peerId||'remote' };
+    if (idx >= 0) remoteSetupPlayers[idx] = entry;
+    else remoteSetupPlayers.push(entry);
+    renderSetup();
+  }
+}
+function broadcastMyName() {
+  if (!mpEnabled() && mpTab !== 'host') return;
+  var p = setupPlayers[0];
+  var msg = { type: 'setup_player', name: p.name, tokenIdx: p.tokenIdx, ready: myReady };
+  mpSendAll(msg);
+  // also send via pending connection for join mode
+  if (MP.connections.length > 0) {
+    try { MP.connections[0].send(msg); } catch(e) {}
+  }
+}
+
+function toggleReady() {
+  myReady = !myReady;
+  broadcastMyName();
+  renderSetup();
 }
 function applyRemoteState(s) {
   G.players=s.players;G.current=s.current;G.phase=s.phase;G.properties=s.properties;
@@ -329,7 +364,15 @@ function initPeer() {
       document.getElementById('host-status').textContent='Share this code — waiting for players...';
     });
     MP.peer.on('connection',function(conn){
-      conn.on('open',function(){MP.connections.push(conn);log('A player joined!','good');if(G.players.length>0)hostBcast();updateMpBar();});
+    conn.on('open',function(){
+      MP.connections.push(conn);
+      log('A player joined!','good');
+      if(G.players.length>0) hostBcast();
+      updateMpBar();
+      // Send host's own info to the new guest
+      var p = setupPlayers[0];
+      conn.send({type:'setup_player', name: p?p.name:'Host', tokenIdx: p?p.tokenIdx:0, ready: myReady, peerId: MP.myPeerId||'host'});
+    });
       conn.on('data',mpOnData);
       conn.on('close',function(){MP.connections=MP.connections.filter(function(c){return c!==conn;});log('A player disconnected.','bad');updateMpBar();});
     });
@@ -340,11 +383,19 @@ function initPeer() {
   }catch(e){console.warn('PeerJS:',e);}
 }
 function selectMpTab(tab) {
-  mpTab=tab;
-  ['local','host','join'].forEach(function(t){
-    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
-    document.getElementById('panel-'+t).classList.toggle('active',t===tab);
+  mpTab = tab;
+  ['local','host','join'].forEach(function(t) {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('panel-'+t).classList.toggle('active', t===tab);
   });
+  // Online modes: trim to 1 player
+  if (tab === 'host' || tab === 'join') {
+    if (setupPlayers.length > 1) setupPlayers = [setupPlayers[0]];
+  } else {
+    // Back to local: ensure at least 2
+    if (setupPlayers.length < 2) setupPlayers.push({name:'Player 2', tokenIdx:1});
+  }
+  renderSetup();
 }
 function joinRoom() {
   var code=document.getElementById('join-code-input').value.trim().toUpperCase();
@@ -352,7 +403,14 @@ function joinRoom() {
   if(!MP.peer){setJS('Not ready yet.',true);return;}
   setJS('Connecting to '+code+'...');
   var conn=MP.peer.connect('mnply-'+code.toLowerCase(),{reliable:true});
-  conn.on('open',function(){MP.mode='client';MP.connections=[conn];MP.myPlayerIndex=1;setJS('Connected! Waiting for host...',false,true);conn.send({type:'player_joined',name:setupPlayers[0]?setupPlayers[0].name:'Guest'});});
+  conn.on('open',function(){
+    MP.mode='client'; MP.connections=[conn]; MP.myPlayerIndex=1;
+    setJS('Connected! Waiting for host...',false,true);
+    var p = setupPlayers[0];
+    conn.send({type:'player_joined', name: p?p.name:'Guest', tokenIdx: p?p.tokenIdx:1, peerId: MP.myPeerId||'guest'});
+    // Also send our setup info right away
+    conn.send({type:'setup_player', name: p?p.name:'Guest', tokenIdx: p?p.tokenIdx:1, ready: myReady, peerId: MP.myPeerId||'guest'});
+  });
   conn.on('data',function(data){mpOnData(data);if(data.type==='state'&&document.getElementById('setup-screen').classList.contains('active'))launchGame();});
   conn.on('error',function(){setJS('Could not connect. Check the code.',true);});
   conn.on('close',function(){log('Disconnected.','bad');updateMpBar();});
@@ -360,14 +418,57 @@ function joinRoom() {
 }
 function setJS(m,e,ok){var el=document.getElementById('join-status');el.textContent=m;el.className='mp-status'+(e?' err':(ok?' ok':''));}
 function renderSetup() {
-  var el=document.getElementById('player-list');el.innerHTML='';
-  setupPlayers.forEach(function(p,i){
-    var row=document.createElement('div');row.className='player-row';
-    row.innerHTML='<input type="text" value="'+p.name+'" placeholder="Player name" oninput="setupPlayers['+i+'].name=this.value"/>'+
-      '<span class="token-pick" onclick="cycleToken('+i+')">'+TOKEN_EMOJIS[p.tokenIdx]+'</span>'+
-      (setupPlayers.length>2?'<button class="remove-player" onclick="removePlayer('+i+')">×</button>':'');
+  var el = document.getElementById('player-list');
+  el.innerHTML = '';
+  var isOnline = mpTab === 'host' || mpTab === 'join';
+
+  setupPlayers.forEach(function(p, i) {
+    var row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML =
+      '<input type="text" value="' + p.name + '" placeholder="Your name" oninput="setupPlayers[' + i + '].name=this.value; broadcastMyName()"/>' +
+      '<span class="token-pick" onclick="cycleToken(' + i + ')">'+TOKEN_EMOJIS[p.tokenIdx]+'</span>' +
+      (!isOnline && setupPlayers.length > 2 ? '<button class="remove-player" onclick="removePlayer('+i+')">×</button>' : '');
     el.appendChild(row);
   });
+
+  // Show remote players (read-only) in online mode
+  if (isOnline && remoteSetupPlayers.length > 0) {
+    remoteSetupPlayers.forEach(function(rp) {
+      var row = document.createElement('div');
+      row.className = 'player-row remote-player-row';
+      row.innerHTML =
+        '<input type="text" value="' + rp.name + '" readonly style="opacity:.6;cursor:default"/>' +
+        '<span style="font-size:19px;padding:5px 8px">'+TOKEN_EMOJIS[rp.tokenIdx]+'</span>' +
+        '<span class="ready-badge"' + (rp.ready ? '' : ' style="opacity:.4"') + '>'+( rp.ready ? '✓ Ready' : '…')+'</span>';
+      el.appendChild(row);
+    });
+  }
+
+  // Ready button for online modes
+  var existing = document.getElementById('btn-ready');
+  if (isOnline) {
+    if (!existing) {
+      var btn = document.createElement('button');
+      btn.id = 'btn-ready';
+      btn.className = 'btn-add';
+      btn.style.cssText = 'border-style:solid;color:var(--green);border-color:var(--green);margin-bottom:9px';
+      btn.textContent = myReady ? '✓ Ready!' : 'Mark as Ready';
+      btn.onclick = function() { toggleReady(); };
+      var addBtn = document.querySelector('.btn-add:not(#btn-ready)');
+      if (addBtn) el.parentNode.insertBefore(btn, addBtn);
+    } else {
+      existing.textContent = myReady ? '✓ Ready!' : 'Mark as Ready';
+      existing.style.background = myReady ? 'var(--green-bg)' : '';
+    }
+    // Hide add player in online mode
+    var addPlayerBtn = document.querySelector('.btn-add:not(#btn-ready)');
+    if (addPlayerBtn) addPlayerBtn.style.display = 'none';
+  } else {
+    if (existing) existing.remove();
+    var addPlayerBtn2 = document.querySelector('.btn-add');
+    if (addPlayerBtn2) addPlayerBtn2.style.display = '';
+  }
 }
 function addPlayer(){if(setupPlayers.length>=6)return;setupPlayers.push({name:'Player '+(setupPlayers.length+1),tokenIdx:setupPlayers.length});renderSetup();}
 function removePlayer(i){setupPlayers.splice(i,1);renderSetup();}

@@ -1497,3 +1497,17 @@ body.has-bar #game-screen {
     padding: 9px 7px
   }
 }
+
+.remote-player-row input[readonly] {
+  background: var(--bg2);
+}
+.ready-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--green);
+  white-space: nowrap;
+  padding: 4px 7px;
+  background: var(--green-bg);
+  border-radius: var(--r-sm);
+  border: 1px solid rgba(58,124,85,.2);
+}
