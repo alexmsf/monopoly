@@ -289,13 +289,14 @@ else if(data.type==='setup_player') {
 function broadcastMyName() {
   clearTimeout(broadcastTimer);
   broadcastTimer = setTimeout(function() {
+    if (!MP.myPeerId) return; // don't send until we have a real ID
     var p = setupPlayers[0];
-    var msg = { type: 'setup_player', name: p ? p.name : 'Guest', tokenIdx: p ? p.tokenIdx : 0, ready: myReady, peerId: MP.myPeerId || 'unknown' };
+    var msg = { type: 'setup_player', name: p ? p.name : 'Guest', tokenIdx: p ? p.tokenIdx : 0, ready: myReady, peerId: MP.myPeerId };
     mpSendAll(msg);
     if (MP.mode === 'client' && MP.connections.length > 0) {
       try { MP.connections[0].send(msg); } catch(e) {}
     }
-  }, 400); // debounce: wait 400ms after last keystroke
+  }, 400);
 }
 
 function toggleReady() {
@@ -356,33 +357,48 @@ function initSetup() {
   renderSetup(); initPeer();
 }
 function initPeer() {
-  MP.roomCode=genRoomCode();
+  MP.roomCode = genRoomCode();
   try {
-    MP.peer=new Peer('mnply-'+MP.roomCode.toLowerCase());
-    MP.peer.on('open',function(id){
-      MP.myPeerId=id;
-      document.getElementById('host-code').textContent=MP.roomCode;
-      document.getElementById('host-status').textContent='Share this code — waiting for players...';
+    MP.peer = new Peer('mnply-' + MP.roomCode.toLowerCase());
+    MP.peer.on('open', function(id) {
+      MP.myPeerId = id;
+      document.getElementById('host-code').textContent = MP.roomCode;
+      document.getElementById('host-status').textContent = 'Share this code — waiting for players...';
     });
-    MP.peer.on('connection',function(conn){
-    conn.on('open',function(){
-      MP.connections.push(conn);
-      log('A player joined!','good');
-      if(G.players.length>0) hostBcast();
-      updateMpBar();
-      // Send host's own info to the new guest
-      var p = setupPlayers[0];
-      conn.send({type:'setup_player', name: p?p.name:'Host', tokenIdx: p?p.tokenIdx:0, ready: myReady, peerId: MP.myPeerId||'host'});
+    MP.peer.on('connection', function(conn) {
+      // Assign a stable key from the remote peer's ID (known at connection time)
+      var remotePeerId = conn.peer;
+      conn.on('open', function() {
+        // Remove any stale entry for this peer, add fresh placeholder
+        remoteSetupPlayers = remoteSetupPlayers.filter(function(p) { return p.peerId !== remotePeerId; });
+        MP.connections.push(conn);
+        log('A player joined!', 'good');
+        if (G.players.length > 0) hostBcast();
+        updateMpBar();
+        // Send host info to guest
+        var p = setupPlayers[0];
+        conn.send({ type: 'setup_player', name: p ? p.name : 'Host', tokenIdx: p ? p.tokenIdx : 0, ready: myReady, peerId: MP.myPeerId });
+      });
+      conn.on('data', function(data) {
+        // Stamp the peerId from the actual connection, never trust self-reported
+        data.peerId = remotePeerId;
+        mpOnData(data);
+      });
+      conn.on('close', function() {
+        MP.connections = MP.connections.filter(function(c) { return c !== conn; });
+        remoteSetupPlayers = remoteSetupPlayers.filter(function(p) { return p.peerId !== remotePeerId; });
+        log('A player disconnected.', 'bad');
+        updateMpBar();
+        renderSetup();
+      });
     });
-      conn.on('data',mpOnData);
-      conn.on('close',function(){MP.connections=MP.connections.filter(function(c){return c!==conn;});log('A player disconnected.','bad');updateMpBar();});
+    MP.peer.on('error', function(err) {
+      if (err.type === 'unavailable-id') { MP.peer.destroy(); setTimeout(initPeer, 400); }
+      else document.getElementById('host-status').textContent = 'Error: ' + err.message;
     });
-    MP.peer.on('error',function(err){
-      if(err.type==='unavailable-id'){MP.peer.destroy();setTimeout(initPeer,400);}
-      else document.getElementById('host-status').textContent='Error: '+err.message;
-    });
-  }catch(e){console.warn('PeerJS:',e);}
+  } catch(e) { console.warn('PeerJS:', e); }
 }
+
 function selectMpTab(tab) {
   mpTab = tab;
   ['local','host','join'].forEach(function(t) {
@@ -399,24 +415,40 @@ function selectMpTab(tab) {
   renderSetup();
 }
 function joinRoom() {
-  var code=document.getElementById('join-code-input').value.trim().toUpperCase();
-  if(!code||code.length<3){setJS('Enter a valid room code.',true);return;}
-  if(!MP.peer){setJS('Not ready yet.',true);return;}
-  setJS('Connecting to '+code+'...');
-  var conn=MP.peer.connect('mnply-'+code.toLowerCase(),{reliable:true});
-  conn.on('open',function(){
-    MP.mode='client'; MP.connections=[conn]; MP.myPlayerIndex=1;
-    setJS('Connected! Waiting for host...',false,true);
-    var p = setupPlayers[0];
-    conn.send({type:'player_joined', name: p?p.name:'Guest', tokenIdx: p?p.tokenIdx:1, peerId: MP.myPeerId||'guest'});
-    // Also send our setup info right away
-    conn.send({type:'setup_player', name: p?p.name:'Guest', tokenIdx: p?p.tokenIdx:1, ready: myReady, peerId: MP.myPeerId||'guest'});
+  var code = document.getElementById('join-code-input').value.trim().toUpperCase();
+  if (!code || code.length < 3) { setJS('Enter a valid room code.', true); return; }
+  if (!MP.peer) { setJS('Not ready yet.', true); return; }
+  setJS('Connecting to ' + code + '...');
+  var conn = MP.peer.connect('mnply-' + code.toLowerCase(), { reliable: true });
+  var hostPeerId = 'mnply-' + code.toLowerCase(); // stable, known before open
+
+  conn.on('open', function() {
+    MP.mode = 'client'; MP.connections = [conn]; MP.myPlayerIndex = 1;
+    setJS('Connected! Waiting for host...', false, true);
+    // Wait for myPeerId to be set, then send
+    function sendJoin() {
+      if (!MP.myPeerId) { setTimeout(sendJoin, 100); return; }
+      var p = setupPlayers[0];
+      conn.send({ type: 'setup_player', name: p ? p.name : 'Guest', tokenIdx: p ? p.tokenIdx : 0, ready: myReady, peerId: MP.myPeerId });
+    }
+    sendJoin();
   });
-  conn.on('data',function(data){mpOnData(data);if(data.type==='state'&&document.getElementById('setup-screen').classList.contains('active'))launchGame();});
-  conn.on('error',function(){setJS('Could not connect. Check the code.',true);});
-  conn.on('close',function(){log('Disconnected.','bad');updateMpBar();});
-  setTimeout(function(){if(!conn.open)setJS('Could not reach that room.',true);},7000);
+  conn.on('data', function(data) {
+    // Stamp host's peerId from the known connection peer ID
+    if (data.type === 'setup_player' || data.type === 'player_joined') {
+      data.peerId = conn.peer; // always the real remote peer ID
+    }
+    mpOnData(data);
+    if (data.type === 'state' && document.getElementById('setup-screen').classList.contains('active')) launchGame();
+  });
+  conn.on('error', function() { setJS('Could not connect. Check the code.', true); });
+  conn.on('close', function() {
+    remoteSetupPlayers = remoteSetupPlayers.filter(function(p) { return p.peerId !== hostPeerId; });
+    log('Disconnected.', 'bad'); updateMpBar(); renderSetup();
+  });
+  setTimeout(function() { if (!conn.open) setJS('Could not reach that room.', true); }, 7000);
 }
+
 function setJS(m,e,ok){var el=document.getElementById('join-status');el.textContent=m;el.className='mp-status'+(e?' err':(ok?' ok':''));}
 function renderSetup() {
   var el = document.getElementById('player-list');
