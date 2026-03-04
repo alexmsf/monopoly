@@ -450,6 +450,7 @@ function joinRoom() {
 }
 
 function setJS(m,e,ok){var el=document.getElementById('join-status');el.textContent=m;el.className='mp-status'+(e?' err':(ok?' ok':''));}
+
 function renderSetup() {
   var el = document.getElementById('player-list');
   el.innerHTML = '';
@@ -460,15 +461,15 @@ function renderSetup() {
     row.className = 'player-row';
     row.innerHTML =
       '<input type="text" value="' + p.name + '" placeholder="Your name" oninput="setupPlayers[' + i + '].name=this.value; broadcastMyName()"/>' +
-      '<span class="token-pick" onclick="cycleToken(' + i + ')">'+TOKEN_EMOJIS[p.tokenIdx]+'</span>' +
+      '<span class="token-pick" onclick="cycleToken(' + i + ')">' + TOKEN_EMOJIS[p.tokenIdx] + '</span>' +
       (!isOnline && setupPlayers.length > 2 ? '<button class="remove-player" onclick="removePlayer('+i+')">×</button>' : '');
     el.appendChild(row);
   });
 
-  // Show remote players (read-only) in online mode
+  // Show remote players (read-only, ready only)
   if (isOnline && remoteSetupPlayers.length > 0) {
     remoteSetupPlayers.forEach(function(rp) {
-      if (!rp.ready) return; // only show once they're ready
+      if (!rp.ready) return;
       var row = document.createElement('div');
       row.className = 'player-row remote-player-row';
       row.innerHTML =
@@ -478,7 +479,6 @@ function renderSetup() {
       el.appendChild(row);
     });
   }
-}
 
   // Ready button for online modes
   var existing = document.getElementById('btn-ready');
@@ -496,7 +496,6 @@ function renderSetup() {
       existing.textContent = myReady ? '✓ Ready!' : 'Mark as Ready';
       existing.style.background = myReady ? 'var(--green-bg)' : '';
     }
-    // Hide add player in online mode
     var addPlayerBtn = document.querySelector('.btn-add:not(#btn-ready)');
     if (addPlayerBtn) addPlayerBtn.style.display = 'none';
   } else {
@@ -505,6 +504,7 @@ function renderSetup() {
     if (addPlayerBtn2) addPlayerBtn2.style.display = '';
   }
 }
+
 function addPlayer(){if(setupPlayers.length>=6)return;setupPlayers.push({name:'Player '+(setupPlayers.length+1),tokenIdx:setupPlayers.length});renderSetup();}
 function removePlayer(i){setupPlayers.splice(i,1);renderSetup();}
 function cycleToken(i){setupPlayers[i].tokenIdx=(setupPlayers[i].tokenIdx+1)%TOKEN_EMOJIS.length;renderSetup();}
