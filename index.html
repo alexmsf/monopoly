@@ -62,6 +62,12 @@
     </div>
     <div id="player-list"></div>
     <button class="btn-add" onclick="addPlayer()">+ Add player</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12.5px;color:var(--text2)">
+      <input type="checkbox" id="setup-timer-toggle"/>
+      <label for="setup-timer-toggle">Turn timer</label>
+      <input type="number" id="setup-timer-secs" value="60" min="15" max="300" style="width:55px;padding:4px 7px;border:1px solid var(--border);border-radius:var(--r-sm);font-size:12px;background:var(--surface2);color:var(--text)"/>
+      <span style="color:var(--text3)">sec</span>
+    </div>
     <button class="btn-start" id="btn-start" onclick="startGame()">Start Game</button>
   </div>
 </div>
@@ -80,6 +86,10 @@
     <div id="rules-panel">
       <button class="btn-rules" onclick="openRules()">📖 Rules</button>
     </div>
+    <div id="music-controls" class="hidden" style="display:flex;align-items:center;gap:6px;margin-top:6px">
+      <button id="music-toggle" onclick="toggleMusic()" style="background:none;border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;font-size:14px" title="Toggle music">🔇</button>
+      <input id="music-volume" type="range" min="0" max="100" value="18" oninput="setMusicVolume(this.value/100)" style="flex:1;accent-color:var(--accent)">
+    </div>
   </div>
 
   <!-- BOARD -->
@@ -87,6 +97,7 @@
     <div id="board-container">
       <img id="board-img" src="final-board.png" alt="Board" />
       <div id="tokens-layer"></div>
+      <div id="strips-layer" style="position:absolute;inset:0;pointer-events:none;"></div>
       <div id="buildings-layer" style="position:absolute;inset:0;pointer-events:none;"></div>
     </div>
   </div>
@@ -96,6 +107,9 @@
     <div id="turn-info">
       <div id="current-player-name">—</div>
       <div id="current-player-money">—</div>
+      <div id="round-counter" style="font-size:10px;color:var(--text3);margin-top:2px">Round 1</div>
+      <div id="doubles-indicator" class="hidden" style="font-size:11px;color:var(--accent);font-weight:600;margin-top:3px"></div>
+      <div id="turn-timer" class="hidden" style="font-size:12px;font-weight:600;color:var(--text2);margin-top:3px"></div>
     </div>
     <div id="dice-area">
       <div id="dice-display">
@@ -148,6 +162,17 @@
 
 <!-- TURN TOAST -->
 <div id="turn-toast" class="hidden"></div>
+
+<!-- RENT POPUP -->
+<div id="rent-popup-overlay" class="hidden" style="position:fixed;inset:0;background:rgba(40,35,31,.6);display:flex;align-items:center;justify-content:center;z-index:150;backdrop-filter:blur(4px)">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:28px 36px;text-align:center;box-shadow:var(--sh-lg);animation:popIn .3s cubic-bezier(.34,1.56,.64,1)">
+    <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Rent Due</div>
+    <div id="rent-popup-sq" style="font-family:'DM Serif Display',serif;font-size:20px;color:var(--text);margin-bottom:4px"></div>
+    <div style="font-size:13px;color:var(--text3);margin-bottom:12px">owned by <span id="rent-popup-owner"></span></div>
+    <div id="rent-popup-amount" style="font-size:36px;font-weight:700;color:var(--red);font-variant-numeric:tabular-nums"></div>
+    <div style="font-size:11px;color:var(--text3);margin-top:10px">Click to continue</div>
+  </div>
+</div>
 
 <script>
   // PASSWORD — default: antibes
