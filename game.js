@@ -28,7 +28,7 @@ var PROP_SPRITE = {
 };
 
 var CHANCE_SPRITE_IDX    = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15];
-var COMMUNITY_SPRITE_IDX = [19,null,null,null,null,24,25,26,null,28,30,31,32,null,23,null];
+var COMMUNITY_SPRITE_IDX = [19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34];
 
 // ── BOARD SQUARES ────────────────────────────────────────────
 var SQUARES = [
@@ -105,6 +105,11 @@ var COLOR_GROUPS = {
   'red':[21,23,24],'yellow':[26,27,29],'green':[31,32,34],'dark-blue':[37,39],
   'station':[5,15,25,35],'utility':[12,28]
 };
+var GROUP_COLORS = {
+  'brown':'#7B3F1A','light-blue':'#6bbfd4','pink':'#e05a8a','orange':'#e07820',
+  'red':'#cc2020','yellow':'#d4aa00','green':'#2a8040','dark-blue':'#1a3a8a',
+  'station':'#555','utility':'#888'
+};
 
 // ── CARDS ────────────────────────────────────────────────────
 var CHANCE_CARDS = [
@@ -127,22 +132,22 @@ var CHANCE_CARDS = [
 ];
 
 var COMMUNITY_CARDS = [
-  {title:'ET SI? — Premier rendez-vous.',    si:19,   text:'Pasta de la Mama, un soir de semaine, et tout a change.\n\nCOLLECT '+M+'200. BEST INVESTMENT EVER.',             action:function(p){collect(p,200);showFX('collect');}},
-  {title:'ET SI? — Rester au lit.',          si:null, text:'Et si on restait au lit? Bonne idee.\n\nSKIP YOUR NEXT TURN.',                                                   action:function(p){p.skipTurns=(p.skipTurns||0)+1;showFX('skip');}},
-  {title:'ET SI? — Porto.',                  si:null, text:'Et si on allait a Porto?\nVOL TROUVE, VALISE FAITE.\n\nCOLLECT '+M+'100.',                                       action:function(p){collect(p,100);showFX('collect');}},
-  {title:'ET SI? — Brunch.',                 si:null, text:'Et si on faisait un brunch?\nCHA BOTE, DIMANCHE, SOLEIL.\n\nCOLLECT '+M+'50.',                                   action:function(p){collect(p,50);showFX('collect');}},
-  {title:'ET SI? — Heritage de mamie.',      si:null, text:"ELLE T'A LAISSE UN BOCAL D'HUILE D'OLIVE ET UNE GLACE.\n\n"+M+'80 ARE YOURS TO COLLECT.',                       action:function(p){collect(p,80);showFX('collect');}},
-  {title:'ET SI? — Quiz ce soir.',           si:24,   text:'LA FOURMILLIERE, VOUS GAGNEZ (EVIDEMMENT).\n\nCOLLECT '+M+'25 FROM EACH PLAYER.',                               action:function(p){collectFromAll(p,25);showFX('collect');}},
-  {title:'ET SI? — Chocolat viennois.',      si:25,   text:'Cafe Kanter, apres le taf, vous etes seuls au monde.\n\nCOLLECT '+M+'20.',                                       action:function(p){collect(p,20);showFX('collect');}},
-  {title:'ET SI? — Un film.',                si:26,   text:'Soiree canape. Trop bien.\n\nAdvance to Chez toi — no rent charged this turn.',                                   action:function(p){p.freeRentThisTurn=true;log(p.name+' — free rent this turn!','important');}},
-  {title:'ET SI? — Petit falafel.',          si:null, text:"NOTRE COIN CACHE. COMME D'HAB.\n\nGET "+M+'30.',                                                                  action:function(p){collect(p,30);showFX('collect');}},
-  {title:'ET SI? — Reparations imprevues.',  si:28,   text:"SOMETHING BROKE. (we won't point fingers)\n\nPAY "+M+'100 TO THE BANK.',                                         action:function(p){charge(p,100);showFX('pay');}},
-  {title:'ET SI? — Bloc Party.',             si:null, text:'Samedi matin. CLIMBING, LUNCH, THE WHOLE RITUAL.\n\nGET '+M+'40.',                                               action:function(p){collect(p,40);showFX('collect');}},
-  {title:"ET SI? — Nuit a l'aeroport.",      si:30,   text:'Il veille sur toi pendant que tu dors.\n\nPRICELESS. REMEMBER THIS THO.',                                        action:function(p){log(p.name+' — precious moment 💙','good');}},
-  {title:'ET SI? — Serenade involontaire.',  si:31,   text:"T'as chante en cuisine sans t'en rendre compte.\n0 mais tout le monde sourit.",                                   action:function(p){log(p.name+' — everyone smiles 🎵','good');}},
-  {title:'ET SI? — Voir la mer.',            si:32,   text:"Il est peut-etre 3h du matin, mais tu n'es pas pret a rentrer.\n\nCOLLECT "+M+'60.',                             action:function(p){collect(p,60);showFX('collect');}},
-  {title:'ET SI? — Sortie culturelle.',      si:23,   text:'Sagrada Familia, il etait temps.\n\nADVANCE TO SAGRADA FAMILIA.',                                                 action:function(p){advanceTo(p,32);}},
-  {title:'ET SI? — Frais medicaux.',         si:null, text:'Trop de viennoiseries.\n\nPAY '+M+'100. A REFAIRE TOUT DE MEME.',                                                action:function(p){charge(p,100);showFX('pay');}}
+  {title:'ET SI? — Premier rendez-vous.',    si:19, text:'Pasta de la Mama, un soir de semaine, et tout a change.\n\nCOLLECT '+M+'200. BEST INVESTMENT EVER.',             action:function(p){collect(p,200);showFX('collect');}},
+  {title:'ET SI? — Rester au lit.',          si:20, text:'Et si on restait au lit? Bonne idee.\n\nSKIP YOUR NEXT TURN.',                                                   action:function(p){p.skipTurns=(p.skipTurns||0)+1;showFX('skip');}},
+  {title:'ET SI? — Porto.',                  si:21, text:'Et si on allait a Porto?\nVOL TROUVE, VALISE FAITE.\n\nCOLLECT '+M+'100.',                                       action:function(p){collect(p,100);showFX('collect');}},
+  {title:'ET SI? — Brunch.',                 si:22, text:'Et si on faisait un brunch?\nCHA BOTE, DIMANCHE, SOLEIL.\n\nCOLLECT '+M+'50.',                                   action:function(p){collect(p,50);showFX('collect');}},
+  {title:'ET SI? — Heritage de mamie.',      si:23, text:"ELLE T'A LAISSE UN BOCAL D'HUILE D'OLIVE ET UNE GLACE.\n\n"+M+'80 ARE YOURS TO COLLECT.',                       action:function(p){collect(p,80);showFX('collect');}},
+  {title:'ET SI? — Quiz ce soir.',           si:24, text:'LA FOURMILLIERE, VOUS GAGNEZ (EVIDEMMENT).\n\nCOLLECT '+M+'25 FROM EACH PLAYER.',                               action:function(p){collectFromAll(p,25);showFX('collect');}},
+  {title:'ET SI? — Chocolat viennois.',      si:25, text:'Cafe Kanter, apres le taf, vous etes seuls au monde.\n\nCOLLECT '+M+'20.',                                       action:function(p){collect(p,20);showFX('collect');}},
+  {title:'ET SI? — Un film.',                si:26, text:'Soiree canape. Trop bien.\n\nAdvance to Chez toi — no rent charged this turn.',                                   action:function(p){p.freeRentThisTurn=true;log(p.name+' — free rent this turn!','important');}},
+  {title:'ET SI? — Petit falafel.',          si:27, text:"NOTRE COIN CACHE. COMME D'HAB.\n\nGET "+M+'30.',                                                                  action:function(p){collect(p,30);showFX('collect');}},
+  {title:'ET SI? — Reparations imprevues.',  si:28, text:"SOMETHING BROKE. (we won't point fingers)\n\nPAY "+M+'100 TO THE BANK.',                                         action:function(p){charge(p,100);showFX('pay');}},
+  {title:'ET SI? — Bloc Party.',             si:29, text:'Samedi matin. CLIMBING, LUNCH, THE WHOLE RITUAL.\n\nGET '+M+'40.',                                               action:function(p){collect(p,40);showFX('collect');}},
+  {title:"ET SI? — Nuit a l'aeroport.",      si:30, text:'Il veille sur toi pendant que tu dors.\n\nPRICELESS. REMEMBER THIS THO.',                                        action:function(p){log(p.name+' — precious moment 💙','good');}},
+  {title:'ET SI? — Serenade involontaire.',  si:31, text:"T'as chante en cuisine sans t'en rendre compte.\n0 mais tout le monde sourit.",                                   action:function(p){log(p.name+' — everyone smiles 🎵','good');}},
+  {title:'ET SI? — Voir la mer.',            si:32, text:"Il est peut-etre 3h du matin, mais tu n'es pas pret a rentrer.\n\nCOLLECT "+M+'60.',                             action:function(p){collect(p,60);showFX('collect');}},
+  {title:'ET SI? — Sortie culturelle.',      si:33, text:'Sagrada Familia, il etait temps.\n\nADVANCE TO SAGRADA FAMILIA.',                                                 action:function(p){advanceTo(p,32);}},
+  {title:'ET SI? — Frais medicaux.',         si:34, text:'Trop de viennoiseries.\n\nPAY '+M+'100. A REFAIRE TOUT DE MEME.',                                                action:function(p){charge(p,100);showFX('pay');}}
 ];
 
 // ── RULES ────────────────────────────────────────────────────
@@ -165,51 +170,128 @@ var RULES_HTML = '<h2>📖 How to Play</h2>' +
   '<p><strong>Bankruptcy:</strong> Can\'t pay a debt → out. Properties return to bank.</p>' +
   '<p><strong>Properties:</strong> Click any property in the list to see its deed card.</p>';
 
-// ── SOUNDS ───────────────────────────────────────────────────
+// ── AUDIO ENGINE ─────────────────────────────────────────────
+var _audioCtx = null;
+
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+function makeOsc(ctx, type, freq, gainVal, start, stop) {
+  var o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(gainVal, start);
+  g.gain.exponentialRampToValueAtTime(0.0001, stop);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(start); o.stop(stop);
+  return {o:o, g:g};
+}
+function makeNoise(ctx, gainVal, start, stop, hipass) {
+  var buf = ctx.createBuffer(1, ctx.sampleRate * (stop-start), ctx.sampleRate);
+  var d = buf.getChannelData(0);
+  for (var i = 0; i < d.length; i++) d[i] = Math.random()*2-1;
+  var src = ctx.createBufferSource();
+  src.buffer = buf;
+  var flt = ctx.createBiquadFilter();
+  flt.type = hipass ? 'highpass' : 'bandpass';
+  flt.frequency.value = hipass ? 800 : 300;
+  flt.Q.value = 1;
+  var g = ctx.createGain();
+  g.gain.setValueAtTime(gainVal, start);
+  g.gain.exponentialRampToValueAtTime(0.0001, stop);
+  src.connect(flt); flt.connect(g); g.connect(ctx.destination);
+  src.start(start); src.stop(stop);
+}
+
+// ── MUSIC PLAYER ─────────────────────────────────────────────
+function initMusicPlayer() {
+  var existing = document.getElementById('spotify-fixed');
+  if (existing) return;
+  var wrap = document.createElement('div');
+  wrap.id = 'spotify-fixed';
+  wrap.style.cssText =
+    'position:fixed;bottom:0;left:0;width:198px;z-index:400;' +
+    'background:#191414;border-top:1px solid #333;border-right:1px solid #333;';
+  wrap.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:#191414;">' +
+      '<span style="color:#b3b3b3;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">🎵 Music</span>' +
+      '<button onclick="toggleSpotifyFixed()" id="sp-toggle" style="font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid #444;background:transparent;color:#b3b3b3;cursor:pointer">Hide</button>' +
+    '</div>' +
+    '<div id="sp-frame">' +
+      '<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DXbYM3nMM0oPk?utm_source=generator"' +
+      ' width="198" height="80" frameborder="0"' +
+      ' allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"' +
+      ' style="display:block;" loading="lazy"></iframe>' +
+    '</div>';
+  document.body.appendChild(wrap);
+}
+
+function toggleSpotifyFixed() {
+  var frame = document.getElementById('sp-frame');
+  var btn   = document.getElementById('sp-toggle');
+  if (!frame) return;
+  var hidden = frame.style.display === 'none';
+  frame.style.display = hidden ? 'block' : 'none';
+  btn.textContent = hidden ? 'Hide' : 'Show';
+}
+
+function startMusic() {}
+function stopMusic() {}
+function setMusicVolume() {}
+function updateMusicUI() {}
+function toggleMusic() { toggleSpotifyFixed(); }
+
 function playSound(type) {
   try {
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    var o = ctx.createOscillator();
-    var g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    var now = ctx.currentTime;
-    if (type === 'dice') {
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(180, now);
-      o.frequency.exponentialRampToValueAtTime(80, now + 0.08);
-      g.gain.setValueAtTime(0.15, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-      o.start(now); o.stop(now + 0.15);
-    } else if (type === 'buy') {
-      o.type = 'sine';
-      o.frequency.setValueAtTime(523, now);
-      o.frequency.setValueAtTime(659, now + 0.1);
-      o.frequency.setValueAtTime(784, now + 0.2);
-      g.gain.setValueAtTime(0.1, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-      o.start(now); o.stop(now + 0.35);
-    } else if (type === 'jail') {
-      o.type = 'square';
-      o.frequency.setValueAtTime(220, now);
-      o.frequency.setValueAtTime(180, now + 0.1);
-      o.frequency.setValueAtTime(140, now + 0.2);
-      g.gain.setValueAtTime(0.08, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-      o.start(now); o.stop(now + 0.4);
-    } else if (type === 'card') {
-      o.type = 'sine';
-      o.frequency.setValueAtTime(440, now);
-      o.frequency.setValueAtTime(550, now + 0.06);
-      g.gain.setValueAtTime(0.07, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-      o.start(now); o.stop(now + 0.2);
+    var ctx = getAudioCtx(), now = ctx.currentTime;
+    if (type === 'dice-rattle') {
+      for (var i = 0; i < 6; i++) makeNoise(ctx, 0.12 - i*0.01, now + i*0.055, now + i*0.055 + 0.045, true);
+    } else if (type === 'dice-land') {
+      makeNoise(ctx, 0.18, now, now + 0.07, false);
+      makeOsc(ctx, 'sine', 90, 0.12, now, now + 0.12);
+    } else if (type === 'dice') {
+      for (var j = 0; j < 5; j++) makeNoise(ctx, 0.1 - j*0.01, now + j*0.05, now + j*0.05 + 0.04, true);
+      makeNoise(ctx, 0.18, now + 0.28, now + 0.34, false);
+      makeOsc(ctx, 'sine', 90, 0.1, now + 0.28, now + 0.38);
+    } else if (type === 'step') {
+      makeNoise(ctx, 0.04, now, now + 0.03, true);
+      makeOsc(ctx, 'sine', 320, 0.025, now, now + 0.04);
+    } else if (type === 'land-property') {
+      makeOsc(ctx, 'sine', 523, 0.07, now, now + 0.22);
+      makeOsc(ctx, 'sine', 659, 0.05, now + 0.06, now + 0.28);
+    } else if (type === 'land-special') {
+      [523, 659, 784, 1047].forEach(function(f, k) { makeOsc(ctx, 'sine', f, 0.07, now + k*0.07, now + k*0.07 + 0.18); });
+    } else if (type === 'land-tax') {
+      [330, 262, 196].forEach(function(f, k) { makeOsc(ctx, 'sawtooth', f, 0.06, now + k*0.09, now + k*0.09 + 0.2); });
     } else if (type === 'collect') {
-      o.type = 'sine';
-      o.frequency.setValueAtTime(660, now);
-      o.frequency.setValueAtTime(880, now + 0.08);
-      g.gain.setValueAtTime(0.06, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-      o.start(now); o.stop(now + 0.25);
+      [659, 784, 1047].forEach(function(f, k) { makeOsc(ctx, 'sine', f, 0.07, now + k*0.06, now + k*0.06 + 0.18); });
+      makeNoise(ctx, 0.04, now, now + 0.08, true);
+    } else if (type === 'pay') {
+      [330, 277, 220].forEach(function(f, k) { makeOsc(ctx, 'triangle', f, 0.07, now + k*0.08, now + k*0.08 + 0.2); });
+    } else if (type === 'buy') {
+      [523, 659, 784, 1047].forEach(function(f, k) { makeOsc(ctx, 'sine', f, 0.08, now + k*0.08, now + k*0.08 + 0.25); });
+    } else if (type === 'build') {
+      makeNoise(ctx, 0.15, now, now + 0.06, false);
+      makeOsc(ctx, 'sine', 880, 0.08, now + 0.05, now + 0.22);
+      makeOsc(ctx, 'sine', 1108, 0.05, now + 0.12, now + 0.28);
+    } else if (type === 'sell-house') {
+      makeOsc(ctx, 'sine', 660, 0.06, now, now + 0.15);
+      makeOsc(ctx, 'sine', 494, 0.05, now + 0.08, now + 0.22);
+    } else if (type === 'jail') {
+      makeOsc(ctx, 'square', 220, 0.09, now, now + 0.18);
+      makeOsc(ctx, 'square', 180, 0.07, now + 0.1, now + 0.3);
+      makeOsc(ctx, 'square', 140, 0.06, now + 0.2, now + 0.5);
+      makeNoise(ctx, 0.1, now, now + 0.15, false);
+    } else if (type === 'card') {
+      makeNoise(ctx, 0.07, now, now + 0.12, true);
+      makeOsc(ctx, 'sine', 660, 0.06, now + 0.08, now + 0.28);
+    } else if (type === 'go') {
+      [523, 659, 784, 659, 1047].forEach(function(f, k) { makeOsc(ctx, 'sine', f, 0.08, now + k*0.09, now + k*0.09 + 0.22); });
+    } else if (type === 'bankrupt') {
+      [311, 277, 233, 196].forEach(function(f, k) { makeOsc(ctx, 'sawtooth', f, 0.06, now + k*0.12, now + k*0.12 + 0.28); });
+    } else if (type === 'confetti') {
+      [784, 1047, 1319, 1568].forEach(function(f, k) { makeOsc(ctx, 'sine', f, 0.09, now + k*0.07, now + k*0.07 + 0.25); });
     }
   } catch(e) {}
 }
@@ -226,12 +308,68 @@ function showFX(type) {
   setTimeout(function() { el.classList.remove('effect-pop'); el.classList.add('hidden'); }, 900);
 }
 
+// ── MONEY FLOAT ──────────────────────────────────────────────
+function showMoneyFloat(playerIndex, amount, isGain) {
+  var panel = document.getElementById('players-panel');
+  var cards = panel.querySelectorAll('.player-card');
+  var card = cards[playerIndex];
+  if (!card) return;
+  var rect = card.getBoundingClientRect();
+  var el = document.createElement('div');
+  el.className = 'money-float ' + (isGain ? 'gain' : 'loss');
+  el.textContent = (isGain ? '+' : '-') + fmt(Math.abs(amount));
+  el.style.left = (rect.left + rect.width / 2) + 'px';
+  el.style.top  = rect.top + 'px';
+  document.body.appendChild(el);
+  setTimeout(function() { el.remove(); }, 1100);
+}
+
 // ── TURN TOAST ───────────────────────────────────────────────
 function showTurnToast(player) {
   var toast = document.getElementById('turn-toast');
   toast.textContent = player.token + ' ' + player.name + "'s turn!";
   toast.classList.remove('hidden');
   setTimeout(function() { toast.classList.add('hidden'); }, 2200);
+}
+
+// ── RENT DUE POPUP ───────────────────────────────────────────
+function showRentPopup(payer, owner, rent, sqName, callback) {
+  var overlay = document.getElementById('rent-popup-overlay');
+  if (!overlay) { callback(); return; }
+  document.getElementById('rent-popup-sq').textContent = sqName;
+  document.getElementById('rent-popup-owner').textContent = owner.token + ' ' + owner.name;
+  document.getElementById('rent-popup-amount').textContent = fmt(rent);
+  overlay.classList.remove('hidden');
+  // auto-dismiss after 2.5s or on click
+  var done = false;
+  function dismiss() {
+    if (done) return; done = true;
+    overlay.classList.add('hidden');
+    callback();
+  }
+  overlay.onclick = dismiss;
+  setTimeout(dismiss, 2500);
+}
+
+// ── CONFETTI ─────────────────────────────────────────────────
+function launchConfetti() {
+  playSound('confetti');
+  var colors = ['#c5703a','#3a62a0','#3a7c55','#d4aa00','#e05a8a','#cc2020','#7b4fbf'];
+  for (var i = 0; i < 80; i++) {
+    (function() {
+      var el = document.createElement('div');
+      el.className = 'confetti-piece';
+      el.style.left = (20 + Math.random() * 60) + 'vw';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.width  = (6 + Math.random() * 8) + 'px';
+      el.style.height = (6 + Math.random() * 8) + 'px';
+      el.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+      el.style.animationDuration = (0.9 + Math.random() * 1.4) + 's';
+      el.style.animationDelay = (Math.random() * 0.5) + 's';
+      document.body.appendChild(el);
+      setTimeout(function() { el.remove(); }, 2500);
+    })();
+  }
 }
 
 // ── TOKENS & COLORS ──────────────────────────────────────────
@@ -242,7 +380,9 @@ var TOKEN_COLORS = ['#c23b2e','#3a62a0','#3a7c55','#c5703a','#7b4fbf','#1a9090']
 var G = {
   players:[], current:0, phase:'rolling',
   properties:{}, chanceDeck:[], communityDeck:[],
-  freeParkingPot:0, doublesCount:0, lastDice:[0,0]
+  freeParkingPot:0, doublesCount:0, lastDice:[0,0],
+  round:0, turnTimer:null, turnTimeLeft:0, turnTimerEnabled:false, turnTimerSeconds:60,
+  stats:{ rentPaid:[], biggestTx:[], doublesRolled:[] }
 };
 
 // ── MULTIPLAYER (PeerJS) ─────────────────────────────────────
@@ -268,13 +408,12 @@ function mpOnData(data) {
   } else if (data.type === 'player_joined') {
     log(data.name + ' joined!', 'good');
     updateMpBar();
-    // Send back our own info immediately
     var p = setupPlayers[0];
     var reply = { type:'setup_player', name: p ? p.name : 'Host', tokenIdx: p ? p.tokenIdx : 0, ready: myReady, peerId: MP.myPeerId || 'host' };
     mpSendAll(reply);
     if (MP.connections.length > 0) try { MP.connections[0].send(reply); } catch(e) {}
   } else if (data.type === 'setup_player') {
-    if (!data.peerId || data.peerId === (MP.myPeerId || 'unknown')) return; // ignore echoes
+    if (!data.peerId || data.peerId === (MP.myPeerId || 'unknown')) return;
     var idx = remoteSetupPlayers.findIndex(function(rp) { return rp.peerId === data.peerId; });
     var entry = { name: data.name, tokenIdx: data.tokenIdx, ready: data.ready || false, peerId: data.peerId };
     if (idx >= 0) remoteSetupPlayers[idx] = entry;
@@ -290,21 +429,16 @@ function broadcastMyName() {
     var p = setupPlayers[0];
     var msg = { type: 'setup_player', name: p ? p.name : 'Guest', tokenIdx: p ? p.tokenIdx : 0, ready: myReady, peerId: MP.myPeerId };
     mpSendAll(msg);
-    if (MP.mode === 'client' && MP.connections.length > 0) {
-      try { MP.connections[0].send(msg); } catch(e) {}
-    }
+    if (MP.mode === 'client' && MP.connections.length > 0) try { MP.connections[0].send(msg); } catch(e) {}
   }, 400);
 }
 
-function toggleReady() {
-  myReady = !myReady;
-  broadcastMyName();
-  renderSetup();
-}
+function toggleReady() { myReady = !myReady; broadcastMyName(); renderSetup(); }
 
 function applyRemoteState(s) {
   G.players = s.players; G.current = s.current; G.phase = s.phase; G.properties = s.properties;
   G.freeParkingPot = s.freeParkingPot; G.doublesCount = s.doublesCount; G.lastDice = s.lastDice;
+  G.round = s.round || 0;
   G.chanceDeck   = s.co.map(function(i){ return CHANCE_CARDS[i]; });
   G.communityDeck = s.mo.map(function(i){ return COMMUNITY_CARDS[i]; });
   if (s.lastDice[0]) {
@@ -312,29 +446,17 @@ function applyRemoteState(s) {
     document.getElementById('die2').textContent = s.lastDice[1];
     document.getElementById('dice-total').textContent = 'Total: ' + (s.lastDice[0] + s.lastDice[1]);
   }
-  if (s.logs) {
-    var logEl = document.getElementById('log-entries');
-    if (logEl) {
-      logEl.innerHTML = '';
-      s.logs.forEach(function(entry) {
-        var d = document.createElement('div');
-        d.className = 'log-entry ' + (entry.cls || '');
-        d.textContent = entry.text;
-        logEl.appendChild(d);
-      });
-    }
-  }
   renderAll(); updateMpBar(); syncActionButtons();
 }
 
 function serializeState() {
-  var logEl = document.getElementById('log-entries');
-  var logs = logEl ? [].slice.call(logEl.children).map(function(d){ return {text:d.textContent, cls:d.className.replace('log-entry','').trim()}; }) : [];
-  return {players:G.players,current:G.current,phase:G.phase,properties:G.properties,
-    freeParkingPot:G.freeParkingPot,doublesCount:G.doublesCount,lastDice:G.lastDice,
-    co:G.chanceDeck.map(function(c){return CHANCE_CARDS.indexOf(c);}),
-    mo:G.communityDeck.map(function(c){return COMMUNITY_CARDS.indexOf(c);}),
-    logs:logs};
+  return {
+    players: G.players, current: G.current, phase: G.phase, properties: G.properties,
+    freeParkingPot: G.freeParkingPot, doublesCount: G.doublesCount, lastDice: G.lastDice,
+    round: G.round,
+    co: G.chanceDeck.map(function(c){ return CHANCE_CARDS.indexOf(c); }),
+    mo: G.communityDeck.map(function(c){ return COMMUNITY_CARDS.indexOf(c); })
+  };
 }
 
 function hostBcast() { if (MP.mode === 'host') mpSendAll({type:'state', state:serializeState()}); }
@@ -393,27 +515,22 @@ function initPeer() {
       document.getElementById('host-status').textContent = 'Share this code — waiting for players...';
     });
     MP.peer.on('connection', function(conn) {
-      var remotePeerId = conn.peer; // stable key known before open
+      var remotePeerId = conn.peer;
       conn.on('open', function() {
         remoteSetupPlayers = remoteSetupPlayers.filter(function(p){ return p.peerId !== remotePeerId; });
         MP.connections.push(conn);
         log('A player joined!', 'good');
         if (G.players.length > 0) hostBcast();
         updateMpBar();
-        // Send host info to guest
         var p = setupPlayers[0];
         conn.send({ type:'setup_player', name: p ? p.name : 'Host', tokenIdx: p ? p.tokenIdx : 0, ready: myReady, peerId: MP.myPeerId });
       });
-      conn.on('data', function(data) {
-        data.peerId = remotePeerId; // always stamp with real peer id
-        mpOnData(data);
-      });
+      conn.on('data', function(data) { data.peerId = remotePeerId; mpOnData(data); });
       conn.on('close', function() {
         MP.connections = MP.connections.filter(function(c){ return c !== conn; });
         remoteSetupPlayers = remoteSetupPlayers.filter(function(p){ return p.peerId !== remotePeerId; });
         log('A player disconnected.', 'bad');
-        updateMpBar();
-        renderSetup();
+        updateMpBar(); renderSetup();
       });
     });
     MP.peer.on('error', function(err) {
@@ -444,7 +561,6 @@ function joinRoom() {
   setJS('Connecting to ' + code + '...');
   var conn = MP.peer.connect('mnply-' + code.toLowerCase(), {reliable: true});
   var hostPeerId = 'mnply-' + code.toLowerCase();
-
   conn.on('open', function() {
     MP.mode = 'client'; MP.connections = [conn]; MP.myPlayerIndex = 1;
     setJS('Connected! Waiting for host...', false, true);
@@ -456,9 +572,7 @@ function joinRoom() {
     sendJoin();
   });
   conn.on('data', function(data) {
-    if (data.type === 'setup_player' || data.type === 'player_joined') {
-      data.peerId = conn.peer;
-    }
+    if (data.type === 'setup_player' || data.type === 'player_joined') data.peerId = conn.peer;
     mpOnData(data);
     if (data.type === 'state' && document.getElementById('setup-screen').classList.contains('active')) launchGame();
   });
@@ -491,7 +605,6 @@ function renderSetup() {
     el.appendChild(row);
   });
 
-  // Show remote players (read-only, only when ready)
   if (isOnline && remoteSetupPlayers.length > 0) {
     remoteSetupPlayers.forEach(function(rp) {
       if (!rp.ready) return;
@@ -505,7 +618,6 @@ function renderSetup() {
     });
   }
 
-  // Ready button for online modes
   var existing = document.getElementById('btn-ready');
   if (isOnline) {
     if (!existing) {
@@ -540,31 +652,51 @@ function cycleToken(i) { setupPlayers[i].tokenIdx = (setupPlayers[i].tokenIdx + 
 
 function startGame() {
   document.getElementById('btn-start').disabled = true;
+  // Read timer settings from setup screen
+  var timerToggle = document.getElementById('setup-timer-toggle');
+  var timerSecs = document.getElementById('setup-timer-secs');
+  G.turnTimerEnabled = timerToggle && timerToggle.checked;
+  G.turnTimerSeconds = timerSecs ? parseInt(timerSecs.value, 10) || 60 : 60;
+
   if (mpTab === 'host') { MP.mode = 'host'; MP.myPlayerIndex = 0; }
   else if (mpTab === 'join') { MP.mode = 'client'; MP.myPlayerIndex = 1; }
-  // Build full player list: host first, then all ready remote players
+
   var allSetup = setupPlayers.slice();
-  remoteSetupPlayers.forEach(function(rp) {
-    if (rp.ready) allSetup.push({ name: rp.name, tokenIdx: rp.tokenIdx });
-  });
+  remoteSetupPlayers.forEach(function(rp) { if (rp.ready) allSetup.push({ name: rp.name, tokenIdx: rp.tokenIdx }); });
+
   G.players = allSetup.map(function(p, i) {
-    return {name: p.name.trim() || 'Player '+(i+1), token: TOKEN_EMOJIS[p.tokenIdx], color: TOKEN_COLORS[p.tokenIdx],
-      money:1500, pos:0, inJail:false, jailTurns:0, bankrupt:false, skipTurns:0, freeRentThisTurn:false, properties:[]};
+    return {
+      name: p.name.trim() || 'Player ' + (i+1),
+      token: TOKEN_EMOJIS[p.tokenIdx],
+      color: TOKEN_COLORS[p.tokenIdx],
+      money:1500, pos:0, inJail:false, jailTurns:0,
+      bankrupt:false, skipTurns:0, freeRentThisTurn:false, properties:[],
+      txHistory: []
+    };
   });
-  G.chanceDeck    = shuffle(CHANCE_CARDS.slice());
-  G.communityDeck = shuffle(COMMUNITY_CARDS.slice());
-  G.properties = {}; G.current = 0; G.phase = 'rolling'; G.doublesCount = 0; G.freeParkingPot = 0; G.lastDice = [0,0];
-  // Set correct player index for online players
+
+  // Init stats tracking
+  G.stats = {
+    rentPaid: G.players.map(function(){ return 0; }),
+    biggestTx: G.players.map(function(){ return 0; }),
+    doublesRolled: G.players.map(function(){ return 0; })
+  };
+
   if (MP.mode === 'client') {
     var myName = setupPlayers[0] ? setupPlayers[0].name.trim() : '';
-    G.players.forEach(function(p, i) {
-      if (p.name === myName) MP.myPlayerIndex = i;
-    });
+    G.players.forEach(function(p, i) { if (p.name === myName) MP.myPlayerIndex = i; });
   }
+
+  G.chanceDeck    = shuffle(CHANCE_CARDS.slice());
+  G.communityDeck = shuffle(COMMUNITY_CARDS.slice());
+  G.properties = {}; G.current = 0; G.phase = 'rolling'; G.doublesCount = 0;
+  G.freeParkingPot = 0; G.lastDice = [0,0]; G.round = 1;
+
   launchGame();
   log('Game started! ' + G.players.map(function(p){ return p.token + ' ' + p.name; }).join(', '), 'important');
   log(curPlayer().name + "'s turn. Roll the dice!");
   showTurnToast(curPlayer());
+  startTurnTimer();
   if (MP.mode === 'host') hostBcast();
   if (mpEnabled()) updateMpBar();
 }
@@ -578,6 +710,40 @@ function launchGame() {
     document.body.classList.add('has-bar');
   }
   renderAll(); sizeBoard();
+  // Show music controls
+  initMusicPlayer();
+}
+
+// ── TURN TIMER ───────────────────────────────────────────────
+var _timerInterval = null;
+function startTurnTimer() {
+  clearInterval(_timerInterval);
+  if (!G.turnTimerEnabled) { hideTurnTimer(); return; }
+  G.turnTimeLeft = G.turnTimerSeconds;
+  updateTimerDisplay();
+  _timerInterval = setInterval(function() {
+    G.turnTimeLeft--;
+    updateTimerDisplay();
+    if (G.turnTimeLeft <= 0) {
+      clearInterval(_timerInterval);
+      if (G.phase === 'rolling' && isMyTurn()) {
+        log('⏱ Time\'s up! Auto-rolling for ' + curPlayer().name + '.', 'important');
+        rollDice();
+      }
+    }
+  }, 1000);
+}
+function stopTurnTimer() { clearInterval(_timerInterval); hideTurnTimer(); }
+function hideTurnTimer() {
+  var el = document.getElementById('turn-timer');
+  if (el) el.classList.add('hidden');
+}
+function updateTimerDisplay() {
+  var el = document.getElementById('turn-timer');
+  if (!el) return;
+  el.classList.remove('hidden');
+  el.textContent = '⏱ ' + G.turnTimeLeft + 's';
+  el.classList.toggle('timer-warning', G.turnTimeLeft <= 10);
 }
 
 // ── HELPERS ──────────────────────────────────────────────────
@@ -594,11 +760,39 @@ function log(msg, cls) {
 }
 
 // ── FINANCE ──────────────────────────────────────────────────
-function collect(player, amount) { player.money += amount; log(player.name + ' collects ' + fmt(amount), 'good'); renderPlayers(); }
+function collect(player, amount) {
+  player.money += amount;
+  var idx = G.players.indexOf(player);
+  if (idx >= 0) {
+    showMoneyFloat(idx, amount, true);
+    player.txHistory = player.txHistory || [];
+    player.txHistory.unshift({label: '+' + fmt(amount), time: G.round});
+    if (player.txHistory.length > 20) player.txHistory.pop();
+    if (G.stats) G.stats.biggestTx[idx] = Math.max(G.stats.biggestTx[idx] || 0, amount);
+  }
+  playSound('collect');
+  log(player.name + ' collects ' + fmt(amount), 'good');
+  renderPlayers();
+}
 function charge(player, amount, recipient) {
   player.money -= amount;
-  if (recipient) { recipient.money += amount; log(player.name + ' pays ' + fmt(amount) + ' to ' + recipient.name + '.', 'bad'); }
-  else log(player.name + ' pays ' + fmt(amount) + ' to bank.', 'bad');
+  var idx = G.players.indexOf(player);
+  if (idx >= 0) {
+    showMoneyFloat(idx, amount, false);
+    player.txHistory = player.txHistory || [];
+    player.txHistory.unshift({label: '-' + fmt(amount), time: G.round});
+    if (player.txHistory.length > 20) player.txHistory.pop();
+    if (G.stats) G.stats.biggestTx[idx] = Math.max(G.stats.biggestTx[idx] || 0, amount);
+  }
+  playSound('pay');
+  if (recipient) {
+    recipient.money += amount;
+    var ridx = G.players.indexOf(recipient);
+    if (ridx >= 0) showMoneyFloat(ridx, amount, true);
+    log(player.name + ' pays ' + fmt(amount) + ' to ' + recipient.name + '.', 'bad');
+  } else {
+    log(player.name + ' pays ' + fmt(amount) + ' to bank.', 'bad');
+  }
   if (player.money < 0) checkBankruptcy(player);
   renderPlayers();
 }
@@ -610,6 +804,7 @@ function checkBankruptcy(player) {
   if (player.money >= 0) return;
   player.bankrupt = true;
   player.properties.forEach(function(id){ delete G.properties[id]; }); player.properties = [];
+  playSound('bankrupt');
   log(player.name + ' is BANKRUPT!', 'bad'); renderAll();
   var alive = G.players.filter(function(p){ return !p.bankrupt; });
   if (alive.length === 1) showWinner(alive[0]);
@@ -652,6 +847,7 @@ function movePlayerStepByStep(player, steps, callback) {
   var remaining = Math.abs(steps);
   function step() {
     player.pos = (player.pos + dir + 40) % 40;
+    playSound('step');
     renderTokens();
     remaining--;
     if (remaining > 0) { setTimeout(step, 120); }
@@ -665,11 +861,14 @@ function rollDice(fromHost) {
   if (!fromHost && mpEnabled() && MP.mode === 'client') { cliSend('roll'); return; }
   var p = curPlayer();
   if (p.bankrupt || G.phase !== 'rolling') return;
+  stopTurnTimer();
   if (p.skipTurns > 0) { p.skipTurns--; log(p.name + ' skips their turn.'); nextTurn(); return; }
 
   var d1 = dr(), d2 = dr(), total = d1+d2, doubles = d1 === d2;
   G.lastDice = [d1, d2];
-  playSound('dice');
+  if (doubles && G.stats) {
+    G.stats.doublesRolled[G.current] = (G.stats.doublesRolled[G.current] || 0) + 1;
+  }
   animDice(d1, d2, total, doubles);
 
   if (p.inJail) {
@@ -681,10 +880,23 @@ function rollDice(fromHost) {
     }
     hostBcast(); return;
   }
-  if (doubles) { G.doublesCount++; if (G.doublesCount >= 3) { log(p.name + ' rolled 3 doubles — GO TO JAIL!', 'bad'); playSound('jail'); sendToJail(p); G.doublesCount = 0; G.phase = 'moved'; showEndTurnBtn(); hostBcast(); return; } }
-  else G.doublesCount = 0;
+  if (doubles) {
+    G.doublesCount++;
+    updateDoublesIndicator();
+    if (G.doublesCount >= 3) { log(p.name + ' rolled 3 doubles — GO TO JAIL!', 'bad'); playSound('jail'); sendToJail(p); G.doublesCount = 0; updateDoublesIndicator(); G.phase = 'moved'; showEndTurnBtn(); hostBcast(); return; }
+  } else {
+    G.doublesCount = 0; updateDoublesIndicator();
+  }
   doMove(p, total);
   hostBcast();
+}
+
+function updateDoublesIndicator() {
+  var el = document.getElementById('doubles-indicator');
+  if (!el) return;
+  if (G.doublesCount === 0) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.textContent = '🎲'.repeat(G.doublesCount) + ' doubles' + (G.doublesCount === 2 ? ' — careful!' : '');
 }
 
 function doMove(player, steps) {
@@ -699,10 +911,14 @@ function doMove(player, steps) {
 function animDice(d1, d2, total, doubles) {
   var e1 = document.getElementById('die1'), e2 = document.getElementById('die2');
   e1.classList.add('rolling'); e2.classList.add('rolling');
+  playSound('dice-rattle');
+  setTimeout(function() { playSound('dice-rattle'); }, 160);
+  setTimeout(function() { playSound('dice-rattle'); }, 300);
   setTimeout(function(){
     e1.classList.remove('rolling'); e2.classList.remove('rolling');
     e1.textContent = d1; e2.textContent = d2;
     document.getElementById('dice-total').textContent = 'Total: ' + total + (doubles ? ' — DOUBLES!' : '');
+    playSound('dice-land');
   }, 460);
 }
 
@@ -711,15 +927,22 @@ function landOn(player) {
   log(player.name + ' lands on ' + sq.name);
   var freeRent = player.freeRentThisTurn; player.freeRentThisTurn = false;
   switch (sq.type) {
-    case 'go':       collect(player, 200); break;
-    case 'tax':      charge(player, sq.price); G.freeParkingPot += sq.price; updateBank(); break;
+    case 'go':       playSound('go'); collect(player, 200); break;
+    case 'tax':      playSound('land-tax'); charge(player, sq.price); G.freeParkingPot += sq.price; updateBank(); break;
     case 'gotojail': playSound('jail'); sendToJail(player); break;
     case 'jail':     break;
     case 'parking':
-      if (G.freeParkingPot > 0) { var pot = G.freeParkingPot; G.freeParkingPot = 0; collect(player, pot); log(player.name + ' collects Free Parking pot: ' + fmt(pot) + '!', 'good'); updateBank(); } break;
+      if (G.freeParkingPot > 0) {
+        var pot = G.freeParkingPot; G.freeParkingPot = 0;
+        launchConfetti();
+        collect(player, pot);
+        log(player.name + ' collects Free Parking pot: ' + fmt(pot) + '!', 'good');
+        updateBank();
+      } else { playSound('land-special'); }
+      break;
     case 'chance':    playSound('card'); drawCard('chance', player);    return;
     case 'community': playSound('card'); drawCard('community', player); return;
-    case 'property': case 'station': case 'utility': handleProperty(player, sq, freeRent); return;
+    case 'property': case 'station': case 'utility': playSound('land-property'); handleProperty(player, sq, freeRent); return;
   }
   showPostMove(player); hostBcast();
 }
@@ -730,7 +953,16 @@ function handleProperty(player, sq, freeRent) {
   var owner = G.players[prop.owner];
   if (owner === player || owner.bankrupt || freeRent) { if (freeRent) log(player.name + ' — free rent card!'); showEndTurnBtn(); hostBcast(); return; }
   var rent = getRent(sq.id, G.lastDice[0] + G.lastDice[1]);
-  if (rent > 0) charge(player, rent, owner);
+  if (rent > 0) {
+    // Track rent stats
+    var pi = G.players.indexOf(player);
+    if (pi >= 0 && G.stats) G.stats.rentPaid[pi] = (G.stats.rentPaid[pi] || 0) + rent;
+    showRentPopup(player, owner, rent, sq.name, function() {
+      charge(player, rent, owner);
+      showEndTurnBtn(); hostBcast();
+    });
+    return;
+  }
   showEndTurnBtn(); hostBcast();
 }
 
@@ -766,7 +998,7 @@ function endTurn(fromHost) {
   ['btn-buy','btn-pass','btn-pay-jail'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
   dis('btn-roll', false); document.getElementById('dice-total').textContent = '';
   var p = curPlayer();
-  if (G.lastDice[0] === G.lastDice[1] && G.doublesCount > 0 && !p.inJail) { G.phase = 'rolling'; log(p.name + ' rolled doubles — roll again!', 'important'); renderTurnInfo(); syncActionButtons(); hostBcast(); return; }
+  if (G.lastDice[0] === G.lastDice[1] && G.doublesCount > 0 && !p.inJail) { G.phase = 'rolling'; log(p.name + ' rolled doubles — roll again!', 'important'); renderTurnInfo(); syncActionButtons(); startTurnTimer(); hostBcast(); return; }
   nextTurn();
 }
 
@@ -775,12 +1007,15 @@ function nextTurn() {
   document.getElementById('die1').textContent = '·'; document.getElementById('die2').textContent = '·';
   ['btn-buy','btn-pass','btn-pay-jail'].forEach(function(id){ document.getElementById(id).classList.add('hidden'); });
   dis('btn-roll', false);
+  document.getElementById('doubles-indicator').classList.add('hidden');
   var next = (G.current+1) % G.players.length, loops = 0;
   while (G.players[next].bankrupt && loops < G.players.length) { next = (next+1) % G.players.length; loops++; }
+  if (next <= G.current || (next === 0 && G.current > 0)) G.round++;
   G.current = next; G.phase = 'rolling'; G.doublesCount = 0;
   renderAll();
-  log('— ' + curPlayer().name + "'s turn —", 'important');
+  log('— ' + curPlayer().name + "'s turn — (Round " + G.round + ')', 'important');
   showTurnToast(curPlayer());
+  startTurnTimer();
   hostBcast();
 }
 
@@ -807,9 +1042,7 @@ function drawCard(type, player) {
     var maxW = Math.min(460, window.innerWidth * 0.8 - 64);
     var scale = Math.min(2, maxW / ACTION_SPRITE.cardW);
     spriteEl.style.cssText =
-      'display:block;' +
-      'width:' + Math.round(ACTION_SPRITE.cardW * scale) + 'px;' +
-      'height:' + Math.round(ACTION_SPRITE.cardH * scale) + 'px;' +
+      'display:block;width:' + Math.round(ACTION_SPRITE.cardW * scale) + 'px;height:' + Math.round(ACTION_SPRITE.cardH * scale) + 'px;' +
       'background-image:url("' + ACTION_SPRITE.file + '");' +
       'background-size:' + Math.round(ACTION_SPRITE.sheetW * scale) + 'px ' + Math.round(ACTION_SPRITE.sheetH * scale) + 'px;' +
       'background-position:' + Math.round(pos.x * scale) + 'px ' + Math.round(pos.y * scale) + 'px;' +
@@ -823,8 +1056,15 @@ function drawCard(type, player) {
 
   var popup = document.getElementById('card-popup');
   popup.classList.remove('hidden');
+  // Real 3D card flip: reset then trigger
   var inner = document.getElementById('card-popup-inner');
-  inner.classList.remove('card-flip'); void inner.offsetWidth; inner.classList.add('card-flip');
+  inner.style.transform = 'rotateY(90deg) scale(0.85)';
+  inner.style.opacity = '0';
+  inner.style.transition = 'none';
+  void inner.offsetWidth;
+  inner.style.transition = 'transform 0.42s cubic-bezier(.34,1.2,.64,1), opacity 0.22s ease';
+  inner.style.transform = 'rotateY(0deg) scale(1)';
+  inner.style.opacity = '1';
 
   var p = player;
   pendingCardAction = function(){ card.action(p); showPostMove(p); };
@@ -872,7 +1112,6 @@ function openRules() { showModal(RULES_HTML); }
 
 // ── MODAL: PROPERTIES ────────────────────────────────────────
 function openProperties() {
-  var gc = {'brown':'#7B3F1A','light-blue':'#6bbfd4','pink':'#e05a8a','orange':'#e07820','red':'#cc2020','yellow':'#d4aa00','green':'#2a8040','dark-blue':'#1a3a8a','station':'#555','utility':'#888'};
   var skip = {go:1,tax:1,jail:1,gotojail:1,parking:1,chance:1,community:1};
   var groups = {};
   SQUARES.forEach(function(sq){ if (!sq.group || skip[sq.type]) return; if (!groups[sq.group]) groups[sq.group] = []; groups[sq.group].push(sq); });
@@ -882,14 +1121,56 @@ function openProperties() {
     groups[g].forEach(function(sq) {
       var prop = G.properties[sq.id], owner = prop ? G.players[prop.owner] : null, h = prop ? prop.houses : 0;
       var hs = h === 0 ? '' : (h === 5 ? 'Hotel' : '×' + h);
-      html += '<div class="prop-item" style="border-left-color:' + (gc[g]||'#aaa') + '" onclick="showPropertyCard(' + sq.id + ')">' +
+      var gc = GROUP_COLORS[g] || '#aaa';
+      html += '<div class="prop-item" style="border-left-color:' + gc + '" onclick="showPropertyCard(' + sq.id + ')">' +
         '<span>' + sq.name + '</span>' +
         '<span>' + (owner ? '<span class="prop-owner">' + owner.token + ' ' + owner.name + '</span>' : '') +
         (hs ? '<span class="prop-houses"> ' + hs + '</span>' : '') + '</span></div>';
     });
     html += '</div>';
   });
+
+  // Offer to sell section
+  var p = curPlayer();
+  if (p.properties.length > 0) {
+    html += '<div class="prop-group"><div class="prop-group-title">YOUR PROPERTIES — OFFER TO SELL</div>';
+    p.properties.forEach(function(id) {
+      var sq = SQUARES[id];
+      html += '<div class="prop-item" style="border-left-color:' + (GROUP_COLORS[sq.group]||'#aaa') + '">' +
+        '<span>' + sq.name + '</span>' +
+        '<button class="btn-sm" style="font-size:11px;padding:4px 9px" onclick="closeModalForce();openOfferSell(' + id + ')">Offer</button></div>';
+    });
+    html += '</div>';
+  }
+
   showModal(html);
+}
+
+function openOfferSell(propId) {
+  var sq = SQUARES[propId];
+  var others = G.players.filter(function(o){ return !o.bankrupt && o !== curPlayer(); });
+  if (!others.length) { showModal('<h2>No one to offer to!</h2>'); return; }
+  var html = '<h2>Offer ' + sq.name + ' for sale</h2>' +
+    '<div class="trade-section"><label>Offer to</label><select id="offer-target">' +
+    others.map(function(o){ return '<option value="' + G.players.indexOf(o) + '">' + o.token + ' ' + o.name + '</option>'; }).join('') + '</select></div>' +
+    '<div class="trade-section"><label>Asking price (' + M + ')</label><input type="number" id="offer-price" value="' + sq.price + '" min="0"/></div>' +
+    '<div class="modal-actions"><button class="btn-action" onclick="confirmOfferSell(' + propId + ')">Send Offer</button>' +
+    '<button class="btn-action secondary" onclick="closeModalForce()">Cancel</button></div>';
+  showModal(html);
+}
+
+function confirmOfferSell(propId) {
+  var ti = parseInt(document.getElementById('offer-target').value, 10);
+  var price = parseInt(document.getElementById('offer-price').value, 10) || 0;
+  var p = curPlayer(), partner = G.players[ti], sq = SQUARES[propId];
+  if (price > partner.money) { log(partner.name + " can't afford " + fmt(price) + '!', 'bad'); closeModalForce(); return; }
+  // Execute the deal
+  partner.money -= price; p.money += price;
+  G.properties[propId].owner = ti;
+  p.properties = p.properties.filter(function(x){ return x !== propId; });
+  partner.properties.push(propId);
+  log(p.name + ' sold ' + sq.name + ' to ' + partner.name + ' for ' + fmt(price) + '!', 'important');
+  closeModalForce(); renderAll(); hostBcast();
 }
 
 // ── MODAL: TRADE ─────────────────────────────────────────────
@@ -962,8 +1243,8 @@ function openBuildMenu() {
 function buildHouse(id, dir, fromHost) {
   if (!fromHost && mpEnabled() && MP.mode === 'client') { cliSend('build', {sid: id, dir: dir}); return; }
   var p = curPlayer(), sq = SQUARES[id], prop = G.properties[id], cost = HOUSE_COST[sq.group] || 100;
-  if (dir === 1) { if (prop.houses >= 5) return; if (p.money < cost) { log('Not enough money!', 'bad'); return; } charge(p, cost); prop.houses++; playSound('buy'); log(p.name + ' builds on ' + sq.name, 'good'); }
-  else { if (prop.houses <= 0) return; var ref = Math.floor(cost/2); prop.houses--; collect(p, ref); }
+  if (dir === 1) { if (prop.houses >= 5) return; if (p.money < cost) { log('Not enough money!', 'bad'); return; } charge(p, cost); prop.houses++; playSound('build'); log(p.name + ' builds on ' + sq.name, 'good'); }
+  else { if (prop.houses <= 0) return; var ref = Math.floor(cost/2); prop.houses--; playSound('sell-house'); collect(p, ref); }
   renderAll(); openBuildMenu(); hostBcast();
 }
 
@@ -974,31 +1255,134 @@ function closeModalForce() { document.getElementById('modal-overlay').classList.
 
 // ── WINNER ───────────────────────────────────────────────────
 function showWinner(player) {
+  stopTurnTimer();
+  // Build recap stats
+  var mostRent = 0, mostRentName = '—';
+  var biggestSingle = 0, biggestSingleName = '—';
+  var mostDoubles = 0, mostDoublesName = '—';
+  G.players.forEach(function(p, i) {
+    var r = G.stats.rentPaid[i] || 0;
+    var b = G.stats.biggestTx[i] || 0;
+    var d = G.stats.doublesRolled[i] || 0;
+    if (r > mostRent) { mostRent = r; mostRentName = p.token + ' ' + p.name; }
+    if (b > biggestSingle) { biggestSingle = b; biggestSingleName = p.token + ' ' + p.name; }
+    if (d > mostDoubles) { mostDoubles = d; mostDoublesName = p.token + ' ' + p.name; }
+  });
+
   var d = document.createElement('div'); d.id = 'winner-banner';
-  d.innerHTML = '<div id="winner-inner"><div class="w-emoji">' + player.token + '</div><h1>' + player.name + ' wins!</h1><p>' + fmt(player.money) + ' in the bank · ' + player.properties.length + ' properties</p><button class="btn-action" style="justify-content:center" onclick="location.reload()">Play Again ♥</button></div>';
+  d.innerHTML = '<div id="winner-inner">' +
+    '<div class="w-emoji">' + player.token + '</div>' +
+    '<h1>' + player.name + ' wins!</h1>' +
+    '<p>' + fmt(player.money) + ' in the bank · ' + player.properties.length + ' properties · Round ' + G.round + '</p>' +
+    '<div class="winner-stats">' +
+    '<div class="winner-stat"><span class="ws-label">💸 Most rent paid</span><span class="ws-val">' + mostRentName + ' — ' + fmt(mostRent) + '</span></div>' +
+    '<div class="winner-stat"><span class="ws-label">🤯 Biggest transaction</span><span class="ws-val">' + biggestSingleName + ' — ' + fmt(biggestSingle) + '</span></div>' +
+    '<div class="winner-stat"><span class="ws-label">🎲 Most doubles</span><span class="ws-val">' + mostDoublesName + ' — ' + mostDoubles + 'x</span></div>' +
+    '</div>' +
+    '<button class="btn-action" style="justify-content:center;margin-top:20px" onclick="location.reload()">Play Again ♥</button>' +
+    '</div>';
   document.body.appendChild(d);
+  launchConfetti();
+  setTimeout(launchConfetti, 600);
 }
 
 // ── RENDER ───────────────────────────────────────────────────
-function renderAll() { renderPlayers(); renderTokens(); renderTurnInfo(); updateBank(); syncActionButtons(); }
+function renderAll() { renderPlayers(); renderTokens(); renderBuildings(); renderTurnInfo(); updateBank(); syncActionButtons(); }
+
+
+// ── HOUSE/HOTEL BOARD OVERLAYS ────────────────────────────────
+function renderBuildings() {
+  var layer = document.getElementById('buildings-layer');
+  if (!layer) return;
+  var cont = document.getElementById('board-container');
+  var W = cont.offsetWidth;
+  layer.innerHTML = '';
+
+  var cs = 0.1375;
+  var stripThick = Math.max(5, W * 0.022);
+  var innerEdgeBottom = (1 - cs) * W;
+  var innerEdgeTop    = cs * W;
+  var innerEdgeLeft   = cs * W;
+  var innerEdgeRight  = (1 - cs) * W;
+
+  Object.keys(G.properties).forEach(function(sqId) {
+    var prop = G.properties[sqId];
+    if (!prop || prop.houses === 0) return;
+    var sq = SQUARES[parseInt(sqId, 10)];
+    if (!sq || !sq.pos || !sq.group || sq.type !== 'property') return;
+
+    var cx = sq.pos[0] * W, cy = sq.pos[1] * W;
+    var color = GROUP_COLORS[sq.group] || '#aaa';
+    var isHotel = prop.houses >= 5;
+    var count = isHotel ? 1 : prop.houses;
+    var side = sq.id >= 1  && sq.id <= 9  ? 'bottom' :
+               sq.id >= 11 && sq.id <= 19 ? 'left'   :
+               sq.id >= 21 && sq.id <= 29 ? 'top'    : 'right';
+    var sz  = isHotel ? Math.max(9, W * 0.018) : Math.max(7, W * 0.013);
+    var gap = isHotel ? 0 : (W * 0.016);  // spacing between house dots
+
+    for (var k = 0; k < count; k++) {
+      var el = document.createElement('div');
+      el.title = isHotel ? 'Hotel' : (count + ' house' + (count > 1 ? 's' : ''));
+      var offset = (k - (count - 1) / 2) * (sz + gap * 0.5);
+      var lx, ly;
+      // Place just inside the inner edge strip (on top of it, toward interior)
+      var inset = stripThick + sz * 0.3;
+      if (side === 'bottom') {
+        lx = cx + offset - sz / 2;
+        ly = innerEdgeBottom - inset - sz;
+      } else if (side === 'top') {
+        lx = cx + offset - sz / 2;
+        ly = innerEdgeTop - stripThick + inset;
+      } else if (side === 'left') {
+        lx = innerEdgeLeft + inset;
+        ly = cy + offset - sz / 2;
+      } else {
+        lx = innerEdgeRight - stripThick - inset - sz;
+        ly = cy + offset - sz / 2;
+      }
+      el.style.cssText = 'position:absolute;width:'+sz+'px;height:'+sz+'px;left:'+lx+'px;top:'+ly+'px;' +
+        'background:' + (isHotel ? '#e53' : color) + ';' +
+        'border:' + (isHotel ? '2px solid #fff' : '1.5px solid rgba(255,255,255,0.8)') + ';' +
+        'border-radius:' + (isHotel ? '2px' : '50%') + ';' +
+        'box-shadow:0 1px 3px rgba(0,0,0,0.5);pointer-events:none;z-index:5;';
+      layer.appendChild(el);
+    }
+  });
+}
 
 function renderPlayers() {
   var panel = document.getElementById('players-panel'); panel.innerHTML = '<div class="panel-title">Players</div>';
   G.players.forEach(function(p, i) {
+    var isLow = !p.bankrupt && p.money < 200;
     var d = document.createElement('div');
-    d.className = 'player-card' + (i === G.current ? ' active-turn' : '') + (p.bankrupt ? ' bankrupt' : '');
-    d.innerHTML = '<div class="player-token-name"><span style="font-size:16px">' + p.token + '</span><span>' + p.name + '</span></div>' +
+    d.className = 'player-card' + (i === G.current ? ' active-turn' : '') + (p.bankrupt ? ' bankrupt' : '') + (isLow ? ' low-money' : '');
+    var txHtml = '';
+    if (p.txHistory && p.txHistory.length) {
+      txHtml = '<div class="tx-history hidden" id="tx-' + i + '">' +
+        p.txHistory.slice(0, 8).map(function(t){ return '<span class="tx-item' + (t.label[0]==='+' ? ' gain' : ' loss') + '">' + t.label + '</span>'; }).join('') +
+        '</div>';
+    }
+    d.innerHTML = '<div class="player-token-name"><span style="font-size:16px">' + p.token + '</span><span>' + p.name + '</span>' +
+      (isLow ? '<span class="low-badge">⚠️</span>' : '') + '</div>' +
       '<div class="player-money">' + fmt(p.money) + '</div>' +
-      '<div class="player-props">' + p.properties.length + ' propert' + (p.properties.length === 1 ? 'y' : 'ies') + '</div>' +
+      '<div class="player-props" onclick="toggleTxHistory(' + i + ')" style="cursor:pointer">' + p.properties.length + ' propert' + (p.properties.length === 1 ? 'y' : 'ies') + (p.txHistory && p.txHistory.length ? ' ▾' : '') + '</div>' +
+      txHtml +
       (p.inJail ? '<div class="player-jail-badge">In Jail</div>' : '');
     panel.appendChild(d);
   });
+}
+
+function toggleTxHistory(i) {
+  var el = document.getElementById('tx-' + i);
+  if (el) el.classList.toggle('hidden');
 }
 
 function renderTurnInfo() {
   var p = curPlayer();
   document.getElementById('current-player-name').textContent = p.token + ' ' + p.name + "'s turn";
   document.getElementById('current-player-money').textContent = fmt(p.money);
+  document.getElementById('round-counter').textContent = 'Round ' + (G.round || 1);
   dis('btn-roll', G.phase !== 'rolling');
 }
 
@@ -1013,7 +1397,7 @@ function renderTokens() {
     var sq = SQUARES[p.pos], pos = sq.pos;
     var same = G.players.slice(0, i).filter(function(pp){ return !pp.bankrupt && pp.pos === p.pos; }).length;
     var ox = (same % 3 - 1) * 13, oy = Math.floor(same / 3) * 16;
-    var el = document.createElement('div'); el.className = 'token';
+    var el = document.createElement('div'); el.className = 'token' + (i === G.current ? ' token-active' : '');
     el.style.left = (pos[0] * W + ox) + 'px'; el.style.top = (pos[1] * H + oy) + 'px';
     el.innerHTML = '<div class="token-bubble" style="--tc:' + p.color + '">' + p.token + '</div>' +
       '<div class="token-name-tag" style="--tc:' + p.color + '">' + p.name.split(' ')[0] + '</div>';
@@ -1027,6 +1411,7 @@ function sizeBoard() {
   var avail = Math.min(wrap.clientWidth - 24, wrap.clientHeight - 24);
   cont.style.width = avail + 'px'; cont.style.height = avail + 'px';
   renderTokens();
+  if (typeof G !== 'undefined' && G.properties) renderBuildings();
 }
 window.addEventListener('resize', sizeBoard);
 
