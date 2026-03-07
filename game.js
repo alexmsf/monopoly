@@ -166,50 +166,119 @@ var RULES_HTML = '<h2>📖 How to Play</h2>' +
   '<p><strong>Properties:</strong> Click any property in the list to see its deed card.</p>';
 
 // ── SOUNDS ───────────────────────────────────────────────────
+// ── AUDIO ENGINE ─────────────────────────────────────────────
+var _audioCtx = null;
+function getAudioCtx() {
+  if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+function makeOsc(ctx, type, freq, gainVal, start, stop) {
+  var o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = type; o.frequency.value = freq;
+  g.gain.setValueAtTime(gainVal, start);
+  g.gain.exponentialRampToValueAtTime(0.0001, stop);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(start); o.stop(stop);
+  return {o:o, g:g};
+}
+function makeNoise(ctx, gainVal, start, stop, hipass) {
+  var buf = ctx.createBuffer(1, ctx.sampleRate * (stop-start), ctx.sampleRate);
+  var d = buf.getChannelData(0);
+  for (var i = 0; i < d.length; i++) d[i] = Math.random()*2-1;
+  var src = ctx.createBufferSource();
+  src.buffer = buf;
+  var flt = ctx.createBiquadFilter();
+  flt.type = hipass ? 'highpass' : 'bandpass';
+  flt.frequency.value = hipass ? 800 : 300;
+  flt.Q.value = 1;
+  var g = ctx.createGain();
+  g.gain.setValueAtTime(gainVal, start);
+  g.gain.exponentialRampToValueAtTime(0.0001, stop);
+  src.connect(flt); flt.connect(g); g.connect(ctx.destination);
+  src.start(start); src.stop(stop);
+}
+
 function playSound(type) {
   try {
-    var ctx = new (window.AudioContext || window.webkitAudioContext)();
-    var o = ctx.createOscillator();
-    var g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    var now = ctx.currentTime;
-    if (type === 'dice') {
-      o.type = 'sawtooth';
-      o.frequency.setValueAtTime(180, now);
-      o.frequency.exponentialRampToValueAtTime(80, now + 0.08);
-      g.gain.setValueAtTime(0.15, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-      o.start(now); o.stop(now + 0.15);
-    } else if (type === 'buy') {
-      o.type = 'sine';
-      o.frequency.setValueAtTime(523, now);
-      o.frequency.setValueAtTime(659, now + 0.1);
-      o.frequency.setValueAtTime(784, now + 0.2);
-      g.gain.setValueAtTime(0.1, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-      o.start(now); o.stop(now + 0.35);
-    } else if (type === 'jail') {
-      o.type = 'square';
-      o.frequency.setValueAtTime(220, now);
-      o.frequency.setValueAtTime(180, now + 0.1);
-      o.frequency.setValueAtTime(140, now + 0.2);
-      g.gain.setValueAtTime(0.08, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-      o.start(now); o.stop(now + 0.4);
-    } else if (type === 'card') {
-      o.type = 'sine';
-      o.frequency.setValueAtTime(440, now);
-      o.frequency.setValueAtTime(550, now + 0.06);
-      g.gain.setValueAtTime(0.07, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
-      o.start(now); o.stop(now + 0.2);
+    var ctx = getAudioCtx(), now = ctx.currentTime;
+    if (type === 'dice-rattle') {
+      // Rapid noise bursts — dice shaking
+      for (var i = 0; i < 6; i++) {
+        makeNoise(ctx, 0.12 - i*0.01, now + i*0.055, now + i*0.055 + 0.045, true);
+      }
+    } else if (type === 'dice-land') {
+      // Thud + short noise for dice settling
+      makeNoise(ctx, 0.18, now, now + 0.07, false);
+      makeOsc(ctx, 'sine', 90, 0.12, now, now + 0.12);
+    } else if (type === 'dice') {
+      // Legacy single call — rattle + land
+      for (var j = 0; j < 5; j++) makeNoise(ctx, 0.1 - j*0.01, now + j*0.05, now + j*0.05 + 0.04, true);
+      makeNoise(ctx, 0.18, now + 0.28, now + 0.34, false);
+      makeOsc(ctx, 'sine', 90, 0.1, now + 0.28, now + 0.38);
+    } else if (type === 'step') {
+      // Soft tick for each token step
+      makeNoise(ctx, 0.04, now, now + 0.03, true);
+      makeOsc(ctx, 'sine', 320, 0.025, now, now + 0.04);
+    } else if (type === 'land-property') {
+      // Gentle two-tone chime
+      makeOsc(ctx, 'sine', 523, 0.07, now, now + 0.22);
+      makeOsc(ctx, 'sine', 659, 0.05, now + 0.06, now + 0.28);
+    } else if (type === 'land-special') {
+      // Sparkly arp for chance/community/parking
+      [523, 659, 784, 1047].forEach(function(f, k) {
+        makeOsc(ctx, 'sine', f, 0.07, now + k*0.07, now + k*0.07 + 0.18);
+      });
+    } else if (type === 'land-tax') {
+      // Descending ominous tones
+      [330, 262, 196].forEach(function(f, k) {
+        makeOsc(ctx, 'sawtooth', f, 0.06, now + k*0.09, now + k*0.09 + 0.2);
+      });
     } else if (type === 'collect') {
-      o.type = 'sine';
-      o.frequency.setValueAtTime(660, now);
-      o.frequency.setValueAtTime(880, now + 0.08);
-      g.gain.setValueAtTime(0.06, now);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-      o.start(now); o.stop(now + 0.25);
+      // Rising bright coins
+      [659, 784, 1047].forEach(function(f, k) {
+        makeOsc(ctx, 'sine', f, 0.07, now + k*0.06, now + k*0.06 + 0.18);
+      });
+      makeNoise(ctx, 0.04, now, now + 0.08, true);
+    } else if (type === 'pay') {
+      // Descending dull tones
+      [330, 277, 220].forEach(function(f, k) {
+        makeOsc(ctx, 'triangle', f, 0.07, now + k*0.08, now + k*0.08 + 0.2);
+      });
+    } else if (type === 'buy') {
+      // Satisfying major chord arp
+      [523, 659, 784, 1047].forEach(function(f, k) {
+        makeOsc(ctx, 'sine', f, 0.08, now + k*0.08, now + k*0.08 + 0.25);
+      });
+    } else if (type === 'build') {
+      // Chunky hammer + bright note
+      makeNoise(ctx, 0.15, now, now + 0.06, false);
+      makeOsc(ctx, 'sine', 880, 0.08, now + 0.05, now + 0.22);
+      makeOsc(ctx, 'sine', 1108, 0.05, now + 0.12, now + 0.28);
+    } else if (type === 'sell-house') {
+      // Reverse — descend
+      makeOsc(ctx, 'sine', 660, 0.06, now, now + 0.15);
+      makeOsc(ctx, 'sine', 494, 0.05, now + 0.08, now + 0.22);
+    } else if (type === 'jail') {
+      // Heavy clang
+      makeOsc(ctx, 'square', 220, 0.09, now, now + 0.18);
+      makeOsc(ctx, 'square', 180, 0.07, now + 0.1, now + 0.3);
+      makeOsc(ctx, 'square', 140, 0.06, now + 0.2, now + 0.5);
+      makeNoise(ctx, 0.1, now, now + 0.15, false);
+    } else if (type === 'card') {
+      // Swoosh + ping
+      makeNoise(ctx, 0.07, now, now + 0.12, true);
+      makeOsc(ctx, 'sine', 660, 0.06, now + 0.08, now + 0.28);
+    } else if (type === 'go') {
+      // Celebratory GO fanfare
+      [523, 659, 784, 659, 1047].forEach(function(f, k) {
+        makeOsc(ctx, 'sine', f, 0.08, now + k*0.09, now + k*0.09 + 0.22);
+      });
+    } else if (type === 'bankrupt') {
+      // Sad trombone-ish
+      [311, 277, 233, 196].forEach(function(f, k) {
+        makeOsc(ctx, 'sawtooth', f, 0.06, now + k*0.12, now + k*0.12 + 0.28);
+      });
     }
   } catch(e) {}
 }
@@ -312,29 +381,16 @@ function applyRemoteState(s) {
     document.getElementById('die2').textContent = s.lastDice[1];
     document.getElementById('dice-total').textContent = 'Total: ' + (s.lastDice[0] + s.lastDice[1]);
   }
-  if (s.logs) {
-    var logEl = document.getElementById('log-entries');
-    if (logEl) {
-      logEl.innerHTML = '';
-      s.logs.forEach(function(entry) {
-        var d = document.createElement('div');
-        d.className = 'log-entry ' + (entry.cls || '');
-        d.textContent = entry.text;
-        logEl.appendChild(d);
-      });
-    }
-  }
   renderAll(); updateMpBar(); syncActionButtons();
 }
 
 function serializeState() {
-  var logEl = document.getElementById('log-entries');
-  var logs = logEl ? [].slice.call(logEl.children).map(function(d){ return {text:d.textContent, cls:d.className.replace('log-entry','').trim()}; }) : [];
-  return {players:G.players,current:G.current,phase:G.phase,properties:G.properties,
-    freeParkingPot:G.freeParkingPot,doublesCount:G.doublesCount,lastDice:G.lastDice,
-    co:G.chanceDeck.map(function(c){return CHANCE_CARDS.indexOf(c);}),
-    mo:G.communityDeck.map(function(c){return COMMUNITY_CARDS.indexOf(c);}),
-    logs:logs};
+  return {
+    players: G.players, current: G.current, phase: G.phase, properties: G.properties,
+    freeParkingPot: G.freeParkingPot, doublesCount: G.doublesCount, lastDice: G.lastDice,
+    co: G.chanceDeck.map(function(c){ return CHANCE_CARDS.indexOf(c); }),
+    mo: G.communityDeck.map(function(c){ return COMMUNITY_CARDS.indexOf(c); })
+  };
 }
 
 function hostBcast() { if (MP.mode === 'host') mpSendAll({type:'state', state:serializeState()}); }
@@ -542,25 +598,18 @@ function startGame() {
   document.getElementById('btn-start').disabled = true;
   if (mpTab === 'host') { MP.mode = 'host'; MP.myPlayerIndex = 0; }
   else if (mpTab === 'join') { MP.mode = 'client'; MP.myPlayerIndex = 1; }
-  // Build full player list: host first, then all ready remote players
-  var allSetup = setupPlayers.slice();
-  remoteSetupPlayers.forEach(function(rp) {
-    if (rp.ready) allSetup.push({ name: rp.name, tokenIdx: rp.tokenIdx });
-  });
-  G.players = allSetup.map(function(p, i) {
-    return {name: p.name.trim() || 'Player '+(i+1), token: TOKEN_EMOJIS[p.tokenIdx], color: TOKEN_COLORS[p.tokenIdx],
-      money:1500, pos:0, inJail:false, jailTurns:0, bankrupt:false, skipTurns:0, freeRentThisTurn:false, properties:[]};
+  G.players = setupPlayers.map(function(p, i) {
+    return {
+      name: p.name.trim() || 'Player ' + (i + 1),
+      token: TOKEN_EMOJIS[p.tokenIdx],
+      color: TOKEN_COLORS[p.tokenIdx],
+      money: 1500, pos: 0, inJail: false, jailTurns: 0,
+      bankrupt: false, skipTurns: 0, freeRentThisTurn: false, properties: []
+    };
   });
   G.chanceDeck    = shuffle(CHANCE_CARDS.slice());
   G.communityDeck = shuffle(COMMUNITY_CARDS.slice());
   G.properties = {}; G.current = 0; G.phase = 'rolling'; G.doublesCount = 0; G.freeParkingPot = 0; G.lastDice = [0,0];
-  // Set correct player index for online players
-  if (MP.mode === 'client') {
-    var myName = setupPlayers[0] ? setupPlayers[0].name.trim() : '';
-    G.players.forEach(function(p, i) {
-      if (p.name === myName) MP.myPlayerIndex = i;
-    });
-  }
   launchGame();
   log('Game started! ' + G.players.map(function(p){ return p.token + ' ' + p.name; }).join(', '), 'important');
   log(curPlayer().name + "'s turn. Roll the dice!");
@@ -594,9 +643,10 @@ function log(msg, cls) {
 }
 
 // ── FINANCE ──────────────────────────────────────────────────
-function collect(player, amount) { player.money += amount; log(player.name + ' collects ' + fmt(amount), 'good'); renderPlayers(); }
+function collect(player, amount) { player.money += amount; playSound('collect'); log(player.name + ' collects ' + fmt(amount), 'good'); renderPlayers(); }
 function charge(player, amount, recipient) {
   player.money -= amount;
+  playSound('pay');
   if (recipient) { recipient.money += amount; log(player.name + ' pays ' + fmt(amount) + ' to ' + recipient.name + '.', 'bad'); }
   else log(player.name + ' pays ' + fmt(amount) + ' to bank.', 'bad');
   if (player.money < 0) checkBankruptcy(player);
@@ -610,6 +660,7 @@ function checkBankruptcy(player) {
   if (player.money >= 0) return;
   player.bankrupt = true;
   player.properties.forEach(function(id){ delete G.properties[id]; }); player.properties = [];
+  playSound('bankrupt');
   log(player.name + ' is BANKRUPT!', 'bad'); renderAll();
   var alive = G.players.filter(function(p){ return !p.bankrupt; });
   if (alive.length === 1) showWinner(alive[0]);
@@ -652,6 +703,7 @@ function movePlayerStepByStep(player, steps, callback) {
   var remaining = Math.abs(steps);
   function step() {
     player.pos = (player.pos + dir + 40) % 40;
+    playSound('step');
     renderTokens();
     remaining--;
     if (remaining > 0) { setTimeout(step, 120); }
@@ -699,10 +751,15 @@ function doMove(player, steps) {
 function animDice(d1, d2, total, doubles) {
   var e1 = document.getElementById('die1'), e2 = document.getElementById('die2');
   e1.classList.add('rolling'); e2.classList.add('rolling');
+  // Rattle during roll, land sound when they settle
+  playSound('dice-rattle');
+  setTimeout(function() { playSound('dice-rattle'); }, 160);
+  setTimeout(function() { playSound('dice-rattle'); }, 300);
   setTimeout(function(){
     e1.classList.remove('rolling'); e2.classList.remove('rolling');
     e1.textContent = d1; e2.textContent = d2;
     document.getElementById('dice-total').textContent = 'Total: ' + total + (doubles ? ' — DOUBLES!' : '');
+    playSound('dice-land');
   }, 460);
 }
 
@@ -711,15 +768,17 @@ function landOn(player) {
   log(player.name + ' lands on ' + sq.name);
   var freeRent = player.freeRentThisTurn; player.freeRentThisTurn = false;
   switch (sq.type) {
-    case 'go':       collect(player, 200); break;
-    case 'tax':      charge(player, sq.price); G.freeParkingPot += sq.price; updateBank(); break;
+    case 'go':       playSound('go'); collect(player, 200); break;
+    case 'tax':      playSound('land-tax'); charge(player, sq.price); G.freeParkingPot += sq.price; updateBank(); break;
     case 'gotojail': playSound('jail'); sendToJail(player); break;
     case 'jail':     break;
     case 'parking':
-      if (G.freeParkingPot > 0) { var pot = G.freeParkingPot; G.freeParkingPot = 0; collect(player, pot); log(player.name + ' collects Free Parking pot: ' + fmt(pot) + '!', 'good'); updateBank(); } break;
+      if (G.freeParkingPot > 0) { playSound('collect'); var pot = G.freeParkingPot; G.freeParkingPot = 0; collect(player, pot); log(player.name + ' collects Free Parking pot: ' + fmt(pot) + '!', 'good'); updateBank(); }
+      else { playSound('land-special'); }
+      break;
     case 'chance':    playSound('card'); drawCard('chance', player);    return;
     case 'community': playSound('card'); drawCard('community', player); return;
-    case 'property': case 'station': case 'utility': handleProperty(player, sq, freeRent); return;
+    case 'property': case 'station': case 'utility': playSound('land-property'); handleProperty(player, sq, freeRent); return;
   }
   showPostMove(player); hostBcast();
 }
@@ -962,8 +1021,8 @@ function openBuildMenu() {
 function buildHouse(id, dir, fromHost) {
   if (!fromHost && mpEnabled() && MP.mode === 'client') { cliSend('build', {sid: id, dir: dir}); return; }
   var p = curPlayer(), sq = SQUARES[id], prop = G.properties[id], cost = HOUSE_COST[sq.group] || 100;
-  if (dir === 1) { if (prop.houses >= 5) return; if (p.money < cost) { log('Not enough money!', 'bad'); return; } charge(p, cost); prop.houses++; playSound('buy'); log(p.name + ' builds on ' + sq.name, 'good'); }
-  else { if (prop.houses <= 0) return; var ref = Math.floor(cost/2); prop.houses--; collect(p, ref); }
+  if (dir === 1) { if (prop.houses >= 5) return; if (p.money < cost) { log('Not enough money!', 'bad'); return; } charge(p, cost); prop.houses++; playSound('build'); log(p.name + ' builds on ' + sq.name, 'good'); }
+  else { if (prop.houses <= 0) return; var ref = Math.floor(cost/2); prop.houses--; playSound('sell-house'); collect(p, ref); }
   renderAll(); openBuildMenu(); hostBcast();
 }
 
@@ -980,7 +1039,64 @@ function showWinner(player) {
 }
 
 // ── RENDER ───────────────────────────────────────────────────
-function renderAll() { renderPlayers(); renderTokens(); renderTurnInfo(); updateBank(); syncActionButtons(); }
+function renderAll() { renderPlayers(); renderTokens(); renderBuildings(); renderTurnInfo(); updateBank(); syncActionButtons(); }
+
+// ── HOUSE/HOTEL BOARD OVERLAYS ────────────────────────────────
+function renderBuildings() {
+  var layer = document.getElementById('buildings-layer');
+  if (!layer) return;
+  var cont = document.getElementById('board-container');
+  var W = cont.offsetWidth, H = cont.offsetHeight;
+  layer.innerHTML = '';
+
+  var gc = {
+    'brown':'#7B3F1A','light-blue':'#6bbfd4','pink':'#e05a8a',
+    'orange':'#e07820','red':'#cc2020','yellow':'#d4aa00',
+    'green':'#2a8040','dark-blue':'#1a3a8a'
+  };
+
+  Object.keys(G.properties).forEach(function(sqId) {
+    var prop = G.properties[sqId];
+    if (!prop || prop.houses === 0) return;
+    var sq = SQUARES[parseInt(sqId, 10)];
+    if (!sq || !sq.pos || !sq.group || sq.type !== 'property') return;
+
+    var pos = sq.pos;
+    var cx = pos[0] * W, cy = pos[1] * H;
+    var color = gc[sq.group] || '#aaa';
+    var isHotel = prop.houses >= 5;
+    var count = isHotel ? 1 : prop.houses;
+
+    // Determine which edge the square is on to offset correctly
+    var side = sqId <= 9 ? 'bottom' : sqId <= 19 ? 'left' : sqId <= 29 ? 'top' : 'right';
+
+    for (var k = 0; k < count; k++) {
+      var el = document.createElement('div');
+      el.className = 'board-building' + (isHotel ? ' board-hotel' : '');
+      el.title = isHotel ? 'Hotel' : (count + ' house' + (count > 1 ? 's' : ''));
+
+      var sz = isHotel ? 11 : 8;
+      var gap = isHotel ? 0 : (k - (count - 1) / 2) * 11;
+
+      var lx, ly;
+      if (side === 'bottom') { lx = cx + gap - sz/2; ly = cy - W*0.115 - sz/2; }
+      else if (side === 'top') { lx = cx + gap - sz/2; ly = cy + W*0.04 - sz/2; }
+      else if (side === 'left') { lx = cx + W*0.04 - sz/2; ly = cy + gap - sz/2; }
+      else                     { lx = cx - W*0.115 - sz/2; ly = cy + gap - sz/2; }
+
+      el.style.cssText = 'position:absolute;width:'+sz+'px;height:'+sz+'px;' +
+        'left:'+lx+'px;top:'+ly+'px;' +
+        'background:' + (isHotel ? '#e53' : color) + ';' +
+        'border:1.5px solid rgba(255,255,255,0.7);' +
+        'border-radius:' + (isHotel ? '2px' : '2px') + ';' +
+        'box-shadow:0 1px 3px rgba(0,0,0,0.5);' +
+        'pointer-events:none;z-index:4;' +
+        'transition:opacity 0.2s;';
+
+      layer.appendChild(el);
+    }
+  });
+}
 
 function renderPlayers() {
   var panel = document.getElementById('players-panel'); panel.innerHTML = '<div class="panel-title">Players</div>';
@@ -1027,6 +1143,7 @@ function sizeBoard() {
   var avail = Math.min(wrap.clientWidth - 24, wrap.clientHeight - 24);
   cont.style.width = avail + 'px'; cont.style.height = avail + 'px';
   renderTokens();
+  if (typeof G !== 'undefined' && G.properties) renderBuildings();
 }
 window.addEventListener('resize', sizeBoard);
 
