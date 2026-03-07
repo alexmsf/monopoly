@@ -172,9 +172,6 @@ var RULES_HTML = '<h2>📖 How to Play</h2>' +
 
 // ── AUDIO ENGINE ─────────────────────────────────────────────
 var _audioCtx = null;
-var _musicGain = null;
-var _musicPlaying = false;
-var _musicVolume = 0.18;
 
 function getAudioCtx() {
   if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -207,88 +204,43 @@ function makeNoise(ctx, gainVal, start, stop, hipass) {
   src.start(start); src.stop(stop);
 }
 
-// ── AMBIENT MUSIC ─────────────────────────────────────────────
-var _musicNodes = [];
-function startMusic() {
-  try {
-    stopMusic();
-    var ctx = getAudioCtx();
-    _musicGain = ctx.createGain();
-    _musicGain.gain.value = _musicVolume;
-    _musicGain.connect(ctx.destination);
-    _musicPlaying = true;
-    scheduleMusicLoop();
-    updateMusicUI();
-  } catch(e) {}
+// ── MUSIC PLAYER ─────────────────────────────────────────────
+function initMusicPlayer() {
+  var existing = document.getElementById('spotify-fixed');
+  if (existing) return;
+  var wrap = document.createElement('div');
+  wrap.id = 'spotify-fixed';
+  wrap.style.cssText =
+    'position:fixed;bottom:0;left:0;width:198px;z-index:400;' +
+    'background:#191414;border-top:1px solid #333;border-right:1px solid #333;';
+  wrap.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:#191414;">' +
+      '<span style="color:#b3b3b3;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">🎵 Music</span>' +
+      '<button onclick="toggleSpotifyFixed()" id="sp-toggle" style="font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid #444;background:transparent;color:#b3b3b3;cursor:pointer">Hide</button>' +
+    '</div>' +
+    '<div id="sp-frame">' +
+      '<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DXbYM3nMM0oPk?utm_source=generator"' +
+      ' width="198" height="80" frameborder="0"' +
+      ' allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"' +
+      ' style="display:block;" loading="lazy"></iframe>' +
+    '</div>';
+  document.body.appendChild(wrap);
 }
-function stopMusic() {
-  try {
-    _musicNodes.forEach(function(n){ try { n.stop(); } catch(e){} });
-    _musicNodes = [];
-    if (_musicGain) { _musicGain.disconnect(); _musicGain = null; }
-    _musicPlaying = false;
-    updateMusicUI();
-  } catch(e) {}
+
+function toggleSpotifyFixed() {
+  var frame = document.getElementById('sp-frame');
+  var btn   = document.getElementById('sp-toggle');
+  if (!frame) return;
+  var hidden = frame.style.display === 'none';
+  frame.style.display = hidden ? 'block' : 'none';
+  btn.textContent = hidden ? 'Hide' : 'Show';
 }
-function setMusicVolume(v) {
-  _musicVolume = v;
-  if (_musicGain) _musicGain.gain.setTargetAtTime(v, getAudioCtx().currentTime, 0.1);
-}
-// Gentle looping ambient — soft chord pads, slow arpeggios
-var _musicLoopTimer = null;
-function scheduleMusicLoop() {
-  if (!_musicPlaying) return;
-  playMusicPhrase();
-  _musicLoopTimer = setTimeout(scheduleMusicLoop, 8000);
-}
-function playMusicPhrase() {
-  if (!_musicPlaying || !_musicGain) return;
-  try {
-    var ctx = getAudioCtx();
-    var now = ctx.currentTime;
-    // Gentle chord pad: C major 7 voicing
-    var chordFreqs = [130.81, 164.81, 196.00, 246.94, 261.63];
-    chordFreqs.forEach(function(f, i) {
-      var o = ctx.createOscillator();
-      var g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.value = f;
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.15, now + 0.8 + i * 0.2);
-      g.gain.setValueAtTime(0.15, now + 5);
-      g.gain.linearRampToValueAtTime(0, now + 7.5);
-      o.connect(g); g.connect(_musicGain);
-      o.start(now); o.stop(now + 7.8);
-      _musicNodes.push(o);
-    });
-    // Soft high arpeggio notes
-    var arpFreqs = [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25];
-    arpFreqs.forEach(function(f, i) {
-      var o = ctx.createOscillator();
-      var g = ctx.createGain();
-      o.type = 'sine';
-      o.frequency.value = f;
-      var t = now + 1.5 + i * 0.9;
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.06, t + 0.08);
-      g.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
-      o.connect(g); g.connect(_musicGain);
-      o.start(t); o.stop(t + 0.75);
-      _musicNodes.push(o);
-    });
-  } catch(e) {}
-}
-function updateMusicUI() {
-  var btn = document.getElementById('music-toggle');
-  var vol = document.getElementById('music-volume');
-  if (!btn) return;
-  btn.textContent = _musicPlaying ? '🎵' : '🔇';
-  btn.title = _musicPlaying ? 'Music on — click to stop' : 'Music off — click to start';
-  if (vol) vol.value = Math.round(_musicVolume * 100);
-}
-function toggleMusic() {
-  if (_musicPlaying) stopMusic(); else startMusic();
-}
+
+function startMusic() {}
+function stopMusic() {}
+function setMusicVolume() {}
+function updateMusicUI() {}
+function toggleMusic() { toggleSpotifyFixed(); }
 
 function playSound(type) {
   try {
@@ -759,8 +711,7 @@ function launchGame() {
   }
   renderAll(); sizeBoard();
   // Show music controls
-  document.getElementById('music-controls').classList.remove('hidden');
-  updateMusicUI();
+  initMusicPlayer();
 }
 
 // ── TURN TIMER ───────────────────────────────────────────────
@@ -1336,60 +1287,23 @@ function showWinner(player) {
 }
 
 // ── RENDER ───────────────────────────────────────────────────
-function renderAll() { renderPlayers(); renderTokens(); renderBuildings(); renderPropertyStrips(); renderTurnInfo(); updateBank(); syncActionButtons(); }
+function renderAll() { renderPlayers(); renderTokens(); renderBuildings(); renderTurnInfo(); updateBank(); syncActionButtons(); }
 
-// ── PROPERTY OWNERSHIP STRIPS ON BOARD ───────────────────────
-function renderPropertyStrips() {
-  var layer = document.getElementById('strips-layer');
-  if (!layer) return;
-  var cont = document.getElementById('board-container');
-  var W = cont.offsetWidth;
-  layer.innerHTML = '';
-  var cs = 0.1375, inner = (1 - 2*cs) / 9;
-  var sqW = inner * W, cornerW = cs * W;
-
-  SQUARES.forEach(function(sq) {
-    if (!sq.group || !sq.pos || sq.type === 'chance' || sq.type === 'community' || sq.type === 'go' || sq.type === 'jail' || sq.type === 'gotojail' || sq.type === 'parking' || sq.type === 'tax') return;
-    var prop = G.properties[sq.id];
-    var color = GROUP_COLORS[sq.group] || '#aaa';
-    var owner = prop ? G.players[prop.owner] : null;
-
-    var el = document.createElement('div');
-    el.className = 'prop-strip';
-    var cx = sq.pos[0] * W, cy = sq.pos[1] * W;
-    var stripSize = W * 0.018;
-    var side = sq.id >= 1 && sq.id <= 9 ? 'bottom' : sq.id >= 11 && sq.id <= 19 ? 'left' : sq.id >= 21 && sq.id <= 29 ? 'top' : 'right';
-    var sw = sqW * 0.72, sh = stripSize;
-
-    var lx, ly, lw, lh;
-    if (side === 'bottom') { lx = cx - sw/2; ly = cy - cs*W*0.88; lw = sw; lh = sh; }
-    else if (side === 'top') { lx = cx - sw/2; ly = cy + cs*W*0.15; lw = sw; lh = sh; }
-    else if (side === 'left') { lx = cx + cs*W*0.15; ly = cy - sw/2; lw = sh; lh = sw; }
-    else { lx = cx - cs*W*0.88; ly = cy - sw/2; lw = sh; lh = sw; }
-
-    el.style.cssText = 'position:absolute;left:'+lx+'px;top:'+ly+'px;width:'+lw+'px;height:'+lh+'px;' +
-      'background:' + color + ';border-radius:2px;pointer-events:none;z-index:3;opacity:0.85;' +
-      'box-shadow:0 1px 3px rgba(0,0,0,0.3);';
-
-    // If owned, overlay player dot
-    if (owner) {
-      el.style.boxShadow = '0 0 0 1.5px ' + owner.color + ', 0 1px 4px rgba(0,0,0,0.4)';
-      var dot = document.createElement('div');
-      dot.style.cssText = 'position:absolute;inset:0;border-radius:2px;background:' + owner.color + ';opacity:0.35;';
-      el.appendChild(dot);
-    }
-
-    layer.appendChild(el);
-  });
-}
 
 // ── HOUSE/HOTEL BOARD OVERLAYS ────────────────────────────────
 function renderBuildings() {
   var layer = document.getElementById('buildings-layer');
   if (!layer) return;
   var cont = document.getElementById('board-container');
-  var W = cont.offsetWidth, H = cont.offsetHeight;
+  var W = cont.offsetWidth;
   layer.innerHTML = '';
+
+  var cs = 0.1375;
+  var stripThick = Math.max(5, W * 0.022);
+  var innerEdgeBottom = (1 - cs) * W;
+  var innerEdgeTop    = cs * W;
+  var innerEdgeLeft   = cs * W;
+  var innerEdgeRight  = (1 - cs) * W;
 
   Object.keys(G.properties).forEach(function(sqId) {
     var prop = G.properties[sqId];
@@ -1397,27 +1311,41 @@ function renderBuildings() {
     var sq = SQUARES[parseInt(sqId, 10)];
     if (!sq || !sq.pos || !sq.group || sq.type !== 'property') return;
 
-    var pos = sq.pos;
-    var cx = pos[0] * W, cy = pos[1] * H;
+    var cx = sq.pos[0] * W, cy = sq.pos[1] * W;
     var color = GROUP_COLORS[sq.group] || '#aaa';
     var isHotel = prop.houses >= 5;
     var count = isHotel ? 1 : prop.houses;
-    var side = sqId <= 9 ? 'bottom' : sqId <= 19 ? 'left' : sqId <= 29 ? 'top' : 'right';
+    var side = sq.id >= 1  && sq.id <= 9  ? 'bottom' :
+               sq.id >= 11 && sq.id <= 19 ? 'left'   :
+               sq.id >= 21 && sq.id <= 29 ? 'top'    : 'right';
+    var sz  = isHotel ? Math.max(9, W * 0.018) : Math.max(7, W * 0.013);
+    var gap = isHotel ? 0 : (W * 0.016);  // spacing between house dots
 
     for (var k = 0; k < count; k++) {
       var el = document.createElement('div');
-      el.className = 'board-building' + (isHotel ? ' board-hotel' : '');
       el.title = isHotel ? 'Hotel' : (count + ' house' + (count > 1 ? 's' : ''));
-      var sz = isHotel ? 11 : 8;
-      var gap = isHotel ? 0 : (k - (count - 1) / 2) * 11;
+      var offset = (k - (count - 1) / 2) * (sz + gap * 0.5);
       var lx, ly;
-      if (side === 'bottom') { lx = cx + gap - sz/2; ly = cy - W*0.115 - sz/2; }
-      else if (side === 'top') { lx = cx + gap - sz/2; ly = cy + W*0.04 - sz/2; }
-      else if (side === 'left') { lx = cx + W*0.04 - sz/2; ly = cy + gap - sz/2; }
-      else { lx = cx - W*0.115 - sz/2; ly = cy + gap - sz/2; }
+      // Place just inside the inner edge strip (on top of it, toward interior)
+      var inset = stripThick + sz * 0.3;
+      if (side === 'bottom') {
+        lx = cx + offset - sz / 2;
+        ly = innerEdgeBottom - inset - sz;
+      } else if (side === 'top') {
+        lx = cx + offset - sz / 2;
+        ly = innerEdgeTop - stripThick + inset;
+      } else if (side === 'left') {
+        lx = innerEdgeLeft + inset;
+        ly = cy + offset - sz / 2;
+      } else {
+        lx = innerEdgeRight - stripThick - inset - sz;
+        ly = cy + offset - sz / 2;
+      }
       el.style.cssText = 'position:absolute;width:'+sz+'px;height:'+sz+'px;left:'+lx+'px;top:'+ly+'px;' +
-        'background:' + (isHotel ? '#e53' : color) + ';border:1.5px solid rgba(255,255,255,0.7);border-radius:2px;' +
-        'box-shadow:0 1px 3px rgba(0,0,0,0.5);pointer-events:none;z-index:5;transition:opacity 0.2s;';
+        'background:' + (isHotel ? '#e53' : color) + ';' +
+        'border:' + (isHotel ? '2px solid #fff' : '1.5px solid rgba(255,255,255,0.8)') + ';' +
+        'border-radius:' + (isHotel ? '2px' : '50%') + ';' +
+        'box-shadow:0 1px 3px rgba(0,0,0,0.5);pointer-events:none;z-index:5;';
       layer.appendChild(el);
     }
   });
@@ -1483,7 +1411,7 @@ function sizeBoard() {
   var avail = Math.min(wrap.clientWidth - 24, wrap.clientHeight - 24);
   cont.style.width = avail + 'px'; cont.style.height = avail + 'px';
   renderTokens();
-  if (typeof G !== 'undefined' && G.properties) { renderBuildings(); renderPropertyStrips(); }
+  if (typeof G !== 'undefined' && G.properties) renderBuildings();
 }
 window.addEventListener('resize', sizeBoard);
 

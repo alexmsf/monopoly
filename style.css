@@ -626,6 +626,7 @@ body.has-bar #game-screen {
   font-size: 12px;
   cursor: pointer;
   transition: all .15s;
+  margin-bottom: 30px;
 }
 
 .btn-rules:hover {
@@ -1545,3 +1546,8 @@ body.has-bar #game-screen {
 .winner-stat { background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px 12px; }
 .ws-label { display:block;font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px; }
 .ws-val { font-size:13px;font-weight:600;color:var(--text); }
+
+/* Music player */
+#music-controls { display: block; width: 100%; }
+#music-controls.hidden { display: none !important; }
+#music-controls iframe { display: block; border-radius: 12px; }

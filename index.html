@@ -86,10 +86,7 @@
     <div id="rules-panel">
       <button class="btn-rules" onclick="openRules()">📖 Rules</button>
     </div>
-    <div id="music-controls" class="hidden" style="display:flex;align-items:center;gap:6px;margin-top:6px">
-      <button id="music-toggle" onclick="toggleMusic()" style="background:none;border:1px solid var(--border);border-radius:var(--r-sm);padding:5px 8px;cursor:pointer;font-size:14px" title="Toggle music">🔇</button>
-      <input id="music-volume" type="range" min="0" max="100" value="18" oninput="setMusicVolume(this.value/100)" style="flex:1;accent-color:var(--accent)">
-    </div>
+    <div id="music-controls" class="hidden"></div>
   </div>
 
   <!-- BOARD -->
@@ -97,7 +94,6 @@
     <div id="board-container">
       <img id="board-img" src="final-board.png" alt="Board" />
       <div id="tokens-layer"></div>
-      <div id="strips-layer" style="position:absolute;inset:0;pointer-events:none;"></div>
       <div id="buildings-layer" style="position:absolute;inset:0;pointer-events:none;"></div>
     </div>
   </div>
