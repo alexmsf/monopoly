@@ -204,43 +204,14 @@ function makeNoise(ctx, gainVal, start, stop, hipass) {
   src.start(start); src.stop(stop);
 }
 
-// ── MUSIC PLAYER ─────────────────────────────────────────────
-function initMusicPlayer() {
-  var existing = document.getElementById('spotify-fixed');
-  if (existing) return;
-  var wrap = document.createElement('div');
-  wrap.id = 'spotify-fixed';
-  wrap.style.cssText =
-    'position:fixed;bottom:0;left:0;width:198px;z-index:400;' +
-    'background:#191414;border-top:1px solid #333;border-right:1px solid #333;';
-  wrap.innerHTML =
-    '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:#191414;">' +
-      '<span style="color:#b3b3b3;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">🎵 Music</span>' +
-      '<button onclick="toggleSpotifyFixed()" id="sp-toggle" style="font-size:10px;padding:2px 7px;border-radius:3px;border:1px solid #444;background:transparent;color:#b3b3b3;cursor:pointer">Hide</button>' +
-    '</div>' +
-    '<div id="sp-frame">' +
-      '<iframe src="https://open.spotify.com/embed/playlist/37i9dQZF1DXbYM3nMM0oPk?utm_source=generator"' +
-      ' width="198" height="80" frameborder="0"' +
-      ' allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"' +
-      ' style="display:block;" loading="lazy"></iframe>' +
-    '</div>';
-  document.body.appendChild(wrap);
-}
-
-function toggleSpotifyFixed() {
-  var frame = document.getElementById('sp-frame');
-  var btn   = document.getElementById('sp-toggle');
-  if (!frame) return;
-  var hidden = frame.style.display === 'none';
-  frame.style.display = hidden ? 'block' : 'none';
-  btn.textContent = hidden ? 'Hide' : 'Show';
-}
-
+// ── MUSIC PLAYER (disabled) ──────────────────────────────────
+function initMusicPlayer() {}
 function startMusic() {}
 function stopMusic() {}
 function setMusicVolume() {}
 function updateMusicUI() {}
-function toggleMusic() { toggleSpotifyFixed(); }
+function toggleMusic() {}
+function toggleSpotifyFixed() {}
 
 function playSound(type) {
   try {
